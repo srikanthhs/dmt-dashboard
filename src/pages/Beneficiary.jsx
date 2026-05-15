@@ -3,6 +3,7 @@ import { Search, X, User, Phone, MapPin, FileText, Heart, Home, Briefcase, Gradu
 import TopBar from '../components/TopBar'
 
 let cachedData = null
+let cachedScooty = null
 
 const FIELD_MAP = {
   n: 'Name', dob: 'Date of Birth', age: 'Age', g: 'Gender', mob: 'Mobile',
@@ -179,10 +180,23 @@ export default function Beneficiary() {
   const dataRef = useRef(null)
 
   useEffect(() => {
-    if (cachedData) { dataRef.current = cachedData; setDataLoaded(true); return }
-    fetch('/beneficiaries.json')
-      .then(r => r.json())
-      .then(d => { cachedData = d; dataRef.current = d; setDataLoaded(true) })
+    const loaded = () => {
+      if (cachedData && cachedScooty) {
+        dataRef.current = [...cachedData, ...cachedScooty]
+        setDataLoaded(true)
+      }
+    }
+    const p1 = cachedData
+      ? Promise.resolve(cachedData)
+      : fetch('/beneficiaries.json').then(r => r.json()).then(d => { cachedData = d; return d })
+    const p2 = cachedScooty
+      ? Promise.resolve(cachedScooty)
+      : fetch('/scooty.json').then(r => r.json()).then(d => { cachedScooty = d; return d })
+    Promise.all([p1, p2])
+      .then(([survey, scooty]) => {
+        dataRef.current = [...survey, ...scooty]
+        setDataLoaded(true)
+      })
       .catch(() => setDataError(true))
   }, [])
 
@@ -194,11 +208,13 @@ export default function Beneficiary() {
       if (
         (r.n && r.n.toLowerCase().includes(lower)) ||
         (r.mob && r.mob.includes(q)) ||
+        (r.aadhar && r.aadhar.toString().includes(q)) ||
         (r.nidc && r.nidc.toLowerCase().includes(lower)) ||
         (r.udid && r.udid.toLowerCase().includes(lower)) ||
         (r.vid && r.vid.toLowerCase().includes(lower)) ||
         (r.pds && r.pds.includes(q)) ||
         (r.rc && r.rc.includes(q)) ||
+        (r.veh && r.veh.toLowerCase().includes(lower)) ||
         (r.dap && r.dap.toLowerCase().includes(lower))
       ) {
         matches.push(r)
@@ -222,7 +238,7 @@ export default function Beneficiary() {
 
   return (
     <div>
-      <TopBar title="Beneficiary Search" subtitle="Search by Name, Mobile, NIDC, UDID, Voter ID, or PDS Number" />
+      <TopBar title="Individual Search" subtitle="Search 16,047 records — Survey beneficiaries + Scooty scheme (Aadhaar, Name, Mobile, NIDC, UDID, Voter ID)" />
       <div style={{ padding: 24 }}>
 
         {/* Search box */}
@@ -244,7 +260,7 @@ export default function Beneficiary() {
               </div>
               <div style={{ fontSize: 12, color: '#5f6368' }}>
                 {dataLoaded
-                  ? `Search across ${(15429).toLocaleString()} records`
+                  ? `Search across 16,047 records (15,429 survey + 618 scooty)`
                   : dataError ? 'Failed to load data' : 'Loading records...'}
               </div>
             </div>
@@ -345,12 +361,15 @@ export default function Beneficiary() {
                       {r.mob && <span>📞 {r.mob}</span>}
                     </div>
                     <div style={{ fontSize: 11, marginTop: 4, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      {r.src === 'scooty' && (
+                        <span style={{ background: '#e8f0fe', color: '#1967d2', padding: '2px 8px', borderRadius: 10, fontWeight: 600 }}>🛵 Scooty</span>
+                      )}
                       {r.dis && (
                         <span style={{ background: '#fce8e6', color: '#c62828', padding: '2px 8px', borderRadius: 10, fontWeight: 500 }}>
                           {r.dis.split('(')[0].trim()}
                         </span>
                       )}
-                      {r.aad === 'Aadhaar Available' && (
+                      {(r.aad === 'Aadhaar Available' || r.aadhar) && (
                         <span style={{ background: '#e6f4ea', color: '#137333', padding: '2px 8px', borderRadius: 10, fontWeight: 500 }}>Aadhaar ✓</span>
                       )}
                       {r.nidc && (
@@ -358,6 +377,9 @@ export default function Beneficiary() {
                       )}
                       {r.udid && (
                         <span style={{ background: '#e6f4ea', color: '#137333', padding: '2px 8px', borderRadius: 10, fontWeight: 500 }}>UDID ✓</span>
+                      )}
+                      {r.veh && (
+                        <span style={{ background: '#f3e8ff', color: '#7c3aed', padding: '2px 8px', borderRadius: 10, fontWeight: 500 }}>{r.veh}</span>
                       )}
                       {r.stat && (
                         <span style={{ color: statusColor(r.stat), fontSize: 11 }}>{r.stat}</span>

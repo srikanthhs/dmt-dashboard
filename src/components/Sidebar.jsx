@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, Users, Activity, Briefcase,
-  GraduationCap, Home, FileText, Map, ChevronLeft, ChevronRight, UserSearch
+  GraduationCap, Home, FileText, Map, ChevronLeft, ChevronRight, UserSearch, Bike
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -14,6 +14,7 @@ const NAV = [
   { to: '/education', icon: GraduationCap, label: 'Education' },
   { to: '/infrastructure', icon: Home, label: 'Infrastructure' },
   { to: '/blocks', icon: Map, label: 'Block-wise' },
+  { to: '/scooty', icon: Bike, label: 'Scooty Scheme' },
   { to: '/beneficiary', icon: UserSearch, label: 'Individual Search' },
 ]
 
