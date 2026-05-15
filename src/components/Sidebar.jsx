@@ -87,7 +87,7 @@ export default function Sidebar() {
               transition: 'background 0.15s',
             })}
           >
-            <Icon size={20} strokeWidth={isActive => isActive ? 2.2 : 1.8} />
+            <Icon size={20} strokeWidth={1.8} />
             {!collapsed && <span>{label}</span>}
           </NavLink>
         ))}
