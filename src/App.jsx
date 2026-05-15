@@ -8,6 +8,7 @@ import Livelihood from './pages/Livelihood'
 import Education from './pages/Education'
 import Infrastructure from './pages/Infrastructure'
 import Blocks from './pages/Blocks'
+import Beneficiary from './pages/Beneficiary'
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
             <Route path="/education" element={<Education />} />
             <Route path="/infrastructure" element={<Infrastructure />} />
             <Route path="/blocks" element={<Blocks />} />
+            <Route path="/beneficiary" element={<Beneficiary />} />
           </Routes>
         </main>
       </div>
