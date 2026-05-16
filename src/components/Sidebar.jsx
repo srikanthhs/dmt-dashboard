@@ -103,7 +103,7 @@ export default function Sidebar() {
         color: '#9aa0a6',
         textAlign: collapsed ? 'center' : 'left',
       }}>
-        {!collapsed ? 'Survey Data · Jan 2026' : '2026'}
+        {!collapsed ? 'Master Data · May 2026' : '2026'}
       </div>
     </aside>
   )

@@ -1,5 +1,5 @@
 import {
-  BarChart, Bar, Cell, Tooltip, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Legend, RadarChart, PolarGrid, PolarAngleAxis, Radar
+  BarChart, Bar, Cell, Tooltip, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Legend, LabelList
 } from 'recharts'
 import ChartCard from '../components/ChartCard'
 import TopBar from '../components/TopBar'
@@ -31,7 +31,7 @@ const blockOverview = Object.entries(stats.blocks).map(([name, total], i) => ({
 const stackedData = BLOCKS.map(block => {
   const disabs = stats.block_disability[block] || {}
   return { name: block, ...disabs }
-}  )
+})
 
 const disabilityKeys = ['Locomotor Disability', 'Intellectual Disability', 'Hearing Impairment', 'Mental Illness', 'Blindness']
 
@@ -83,7 +83,11 @@ export default function Blocks() {
             <div key={i} style={{
               background:'#fff', borderRadius:10, padding:'14px 16px',
               border:`1px solid ${COLORS[i]}30`, boxShadow:'0 1px 3px rgba(0,0,0,0.06)',
-            }}>
+              cursor: 'pointer', transition: 'box-shadow 0.15s, border-color 0.15s',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'; e.currentTarget.style.borderColor = COLORS[i] }}
+              onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)'; e.currentTarget.style.borderColor = `${COLORS[i]}30` }}
+            >
               <div style={{ fontSize:11, color:'#5f6368', marginBottom:4 }}>{name}</div>
               <div style={{ fontSize:22, fontWeight:700, color: COLORS[i] }}>
                 {value.toLocaleString()}
@@ -99,7 +103,7 @@ export default function Blocks() {
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
           <ChartCard title="Total Persons by Block">
             <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={blockOverview} margin={{ top:0, right:8 }}>
+              <BarChart data={blockOverview} margin={{ top:20, right:8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                 <XAxis dataKey="name" tick={{ fontSize:11, fill:'#5f6368' }} />
                 <YAxis tick={{ fontSize:11, fill:'#5f6368' }} />
@@ -108,6 +112,7 @@ export default function Blocks() {
                   {blockOverview.map((b, i) => (
                     <Cell key={i} fill={b.color} />
                   ))}
+                  <LabelList dataKey="total" position="top" style={{ fontSize: 10, fill: '#5f6368', fontWeight: 500 }} formatter={v => v.toLocaleString()} />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -124,7 +129,17 @@ export default function Blocks() {
                   formatter={v => <span style={{ fontSize:10, color:'#3c4043' }}>{v}</span>} />
                 {disabilityKeys.map((key, i) => (
                   <Bar key={key} dataKey={key} stackId="a" fill={COLORS[i]}
-                    radius={i === disabilityKeys.length - 1 ? [3,3,0,0] : [0,0,0,0]} />
+                    radius={i === disabilityKeys.length - 1 ? [3,3,0,0] : [0,0,0,0]}>
+                    {i === disabilityKeys.length - 1 && (
+                      <LabelList dataKey={key} position="top" style={{ fontSize: 9, fill: '#5f6368', fontWeight: 500 }}
+                        formatter={(v, entry) => {
+                          const row = stackedData.find(d => d.name === entry?.name)
+                          if (!row) return ''
+                          const total = disabilityKeys.reduce((s, k) => s + (row[k] || 0), 0)
+                          return total.toLocaleString()
+                        }} />
+                    )}
+                  </Bar>
                 ))}
               </BarChart>
             </ResponsiveContainer>

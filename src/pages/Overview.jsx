@@ -1,11 +1,12 @@
 import {
   BarChart, Bar, PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
-  Legend, XAxis, YAxis, CartesianGrid
+  Legend, XAxis, YAxis, CartesianGrid, LabelList
 } from 'recharts'
 import {
   Users, FileCheck, ShieldCheck, Briefcase,
   Activity, UserCheck
 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import StatCard from '../components/StatCard'
 import ChartCard from '../components/ChartCard'
 import TopBar from '../components/TopBar'
@@ -37,36 +38,43 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 
 export default function Overview() {
+  const navigate = useNavigate()
   const employed_pct = ((stats.employed / stats.total) * 100).toFixed(1)
   const udid_pct = ((stats.udid_holders / stats.total) * 100).toFixed(1)
   const aadhaar_pct = ((stats.aadhaar_linked / stats.total) * 100).toFixed(1)
 
   return (
     <div>
-      <TopBar title="Overview" subtitle="Mayiladuthurai District · Survey Data Jan 2026" />
+      <TopBar title="Overview" subtitle="Mayiladuthurai District · May 2026 Block-wise Master Data" />
       <div style={{ padding: '24px' }}>
 
         {/* Stat Cards */}
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 24 }}>
           <StatCard label="Total Persons Surveyed" value={stats.total}
-            icon={Users} color="#1a73e8" sub="Across all 6 blocks" />
+            icon={Users} color="#1a73e8" sub="Across all 6 blocks"
+            onClick={() => navigate('/demographics')} />
           <StatCard label="UDID Card Holders" value={stats.udid_holders}
-            icon={FileCheck} color="#34a853" sub={`${udid_pct}% coverage`} />
+            icon={FileCheck} color="#34a853" sub={`${udid_pct}% coverage`}
+            onClick={() => navigate('/benefits')} />
           <StatCard label="Aadhaar Linked" value={stats.aadhaar_linked}
-            icon={ShieldCheck} color="#fbbc04" sub={`${aadhaar_pct}% linked`} />
+            icon={ShieldCheck} color="#fbbc04" sub={`${aadhaar_pct}% linked`}
+            onClick={() => navigate('/benefits')} />
           <StatCard label="Currently Employed" value={stats.employed}
-            icon={Briefcase} color="#ea4335" sub={`${employed_pct}% employment rate`} />
+            icon={Briefcase} color="#ea4335" sub={`${employed_pct}% employment rate`}
+            onClick={() => navigate('/livelihood')} />
           <StatCard label="NIDC Card Holders" value={stats.nidc_holders}
-            icon={UserCheck} color="#9334e6" sub="National Identity Card" />
+            icon={UserCheck} color="#9334e6" sub="National Identity Card"
+            onClick={() => navigate('/benefits')} />
           <StatCard label="Permanent Disability" value={stats.permanent_disability}
-            icon={Activity} color="#00acc1" sub="vs Temporary cases" />
+            icon={Activity} color="#00acc1" sub="vs Temporary cases"
+            onClick={() => navigate('/disability')} />
         </div>
 
         {/* Row 1 */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
           <ChartCard title="Top Disability Types">
             <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={disabilityTop} layout="vertical" margin={{ left: 0, right: 16 }}>
+              <BarChart data={disabilityTop} layout="vertical" margin={{ left: 0, right: 48 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
                 <XAxis type="number" tick={{ fontSize: 11, fill: '#5f6368' }} />
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: '#5f6368' }} width={120} />
@@ -75,6 +83,7 @@ export default function Overview() {
                   {disabilityTop.map((_, i) => (
                     <Cell key={i} fill={COLORS[i % COLORS.length]} />
                   ))}
+                  <LabelList dataKey="value" position="right" style={{ fontSize: 10, fill: '#5f6368', fontWeight: 500 }} formatter={v => v.toLocaleString()} />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -82,12 +91,14 @@ export default function Overview() {
 
           <ChartCard title="Block-wise Distribution">
             <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={blockData} margin={{ top: 0, right: 8 }}>
+              <BarChart data={blockData} margin={{ top: 20, right: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                 <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#5f6368' }} />
                 <YAxis tick={{ fontSize: 11, fill: '#5f6368' }} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" fill="#1a73e8" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="value" fill="#1a73e8" radius={[4, 4, 0, 0]}>
+                  <LabelList dataKey="value" position="top" style={{ fontSize: 10, fill: '#5f6368', fontWeight: 500 }} formatter={v => v.toLocaleString()} />
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -99,7 +110,9 @@ export default function Overview() {
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
                 <Pie data={genderData} cx="50%" cy="50%" innerRadius={55} outerRadius={85}
-                  dataKey="value" paddingAngle={3}>
+                  dataKey="value" paddingAngle={3}
+                  label={({ name, value, percent }) => percent > 0.05 ? `${value.toLocaleString()}` : ''}
+                  labelLine={false}>
                   {genderData.map((_, i) => (
                     <Cell key={i} fill={COLORS[i]} />
                   ))}
@@ -113,12 +126,14 @@ export default function Overview() {
 
           <ChartCard title="Age Distribution">
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={ageData} margin={{ top: 0, right: 8 }}>
+              <BarChart data={ageData} margin={{ top: 20, right: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                 <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#5f6368' }} />
                 <YAxis tick={{ fontSize: 10, fill: '#5f6368' }} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" fill="#34a853" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="value" fill="#34a853" radius={[3, 3, 0, 0]}>
+                  <LabelList dataKey="value" position="top" style={{ fontSize: 9, fill: '#5f6368', fontWeight: 500 }} formatter={v => v.toLocaleString()} />
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -128,7 +143,9 @@ export default function Overview() {
               <PieChart>
                 <Pie data={Object.entries(stats.area_type).map(([name, value]) => ({ name, value }))}
                   cx="50%" cy="50%" innerRadius={55} outerRadius={85}
-                  dataKey="value" paddingAngle={3}>
+                  dataKey="value" paddingAngle={3}
+                  label={({ value, percent }) => percent > 0.05 ? value.toLocaleString() : ''}
+                  labelLine={false}>
                   <Cell fill="#1a73e8" />
                   <Cell fill="#34a853" />
                 </Pie>

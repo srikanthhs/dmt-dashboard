@@ -1,7 +1,7 @@
+import { useState } from 'react'
 import {
   BarChart, Bar, PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
-  Legend, XAxis, YAxis, CartesianGrid, RadarChart, Radar, PolarGrid,
-  PolarAngleAxis
+  Legend, XAxis, YAxis, CartesianGrid, LabelList
 } from 'recharts'
 import ChartCard from '../components/ChartCard'
 import TopBar from '../components/TopBar'
@@ -27,9 +27,39 @@ const CustomTooltip = ({ active, payload, label }) => {
   )
 }
 
+const SortIcon = ({ col, sortKey, sortDir }) => {
+  if (sortKey !== col) return <span style={{ color: '#d0d0d0', fontSize: 10 }}> ⇅</span>
+  return <span style={{ color: '#1a73e8', fontSize: 10 }}>{sortDir === 'asc' ? ' ↑' : ' ↓'}</span>
+}
+
 export default function Disability() {
   const top1 = disabilityData[0]
-  const top2 = disabilityData[1]
+  const [sortKey, setSortKey] = useState('value')
+  const [sortDir, setSortDir] = useState('desc')
+  const [highlight, setHighlight] = useState(null)
+
+  const handleSort = (key) => {
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortKey(key); setSortDir('desc') }
+  }
+
+  const sortedData = [...disabilityData].sort((a, b) => {
+    const av = sortKey === 'name' ? a.name : sortKey === 'pct' ? parseFloat(a.pct) : a.value
+    const bv = sortKey === 'name' ? b.name : sortKey === 'pct' ? parseFloat(b.pct) : b.value
+    if (typeof av === 'string') return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av)
+    return sortDir === 'asc' ? av - bv : bv - av
+  })
+
+  const thStyle = (key) => ({
+    textAlign: key === 'name' ? 'left' : 'right',
+    padding: '8px 10px',
+    color: sortKey === key ? '#1a73e8' : '#5f6368',
+    fontWeight: 500,
+    cursor: 'pointer',
+    userSelect: 'none',
+    whiteSpace: 'nowrap',
+    background: '#f8f9fa',
+  })
 
   return (
     <div>
@@ -38,29 +68,34 @@ export default function Disability() {
 
         <div style={{ display:'flex', gap:16, flexWrap:'wrap', marginBottom:24 }}>
           <StatCard label="Most Common Disability" value={top1.value}
-            icon={Activity} color="#1a73e8" sub={top1.name} />
+            icon={Activity} color="#1a73e8" sub={top1.name}
+            onClick={() => setHighlight(top1.name)} />
           <StatCard label="Permanent Cases" value={stats.permanent_disability}
-            icon={Zap} color="#ea4335" sub="Nature of disability" />
+            icon={Zap} color="#ea4335" sub="Nature of disability"
+            onClick={() => setHighlight('Permanent')} />
           <StatCard label="Hearing Impairment" value={stats.disability_type['Hearing Impairment']}
-            icon={Heart} color="#34a853" sub="Type 9" />
+            icon={Heart} color="#34a853" sub="Type 9"
+            onClick={() => setHighlight('Hearing Impairment')} />
           <StatCard label="Visual Impairment" value={(stats.disability_type['Blindness'] || 0) + (stats.disability_type['Low Vision'] || 0)}
-            icon={Eye} color="#fbbc04" sub="Blindness + Low Vision" />
+            icon={Eye} color="#fbbc04" sub="Blindness + Low Vision"
+            onClick={() => setHighlight('Blindness')} />
         </div>
 
-        {/* Full disability type table */}
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:16 }}>
           <ChartCard title="All Disability Types" style={{ gridColumn:'1 / -1' }}>
             <ResponsiveContainer width="100%" height={320}>
-              <BarChart data={disabilityData} margin={{ left:8, right:16 }}>
+              <BarChart data={disabilityData} margin={{ left:8, right:16, top:20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                 <XAxis dataKey="name" tick={{ fontSize:10, fill:'#5f6368' }}
                   angle={-30} textAnchor="end" height={60} />
                 <YAxis tick={{ fontSize:11, fill:'#5f6368' }} />
                 <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="value" radius={[4,4,0,0]}>
-                  {disabilityData.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                  {disabilityData.map((d, i) => (
+                    <Cell key={i} fill={COLORS[i % COLORS.length]}
+                      opacity={highlight && d.name !== highlight && highlight !== 'Permanent' ? 0.35 : 1} />
                   ))}
+                  <LabelList dataKey="value" position="top" style={{ fontSize: 9, fill: '#5f6368', fontWeight: 500 }} formatter={v => v.toLocaleString()} />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -72,7 +107,9 @@ export default function Disability() {
             <ResponsiveContainer width="100%" height={240}>
               <PieChart>
                 <Pie data={natureData} cx="50%" cy="50%" innerRadius={60} outerRadius={90}
-                  dataKey="value" paddingAngle={4}>
+                  dataKey="value" paddingAngle={4}
+                  label={({ value, percent }) => percent > 0.05 ? value.toLocaleString() : ''}
+                  labelLine={false}>
                   <Cell fill="#1a73e8" />
                   <Cell fill="#fbbc04" />
                 </Pie>
@@ -93,36 +130,60 @@ export default function Disability() {
             </div>
           </ChartCard>
 
-          {/* Table breakdown */}
+          {/* Sortable table */}
           <ChartCard title="Disability Breakdown Table">
+            {highlight && (
+              <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 12, color: '#1a73e8', fontWeight: 500 }}>Filtered: {highlight}</span>
+                <button onClick={() => setHighlight(null)} style={{ fontSize: 11, color: '#ea4335', background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px' }}>✕ clear</button>
+              </div>
+            )}
             <div style={{ overflowY:'auto', maxHeight:280 }}>
               <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13 }}>
-                <thead>
-                  <tr style={{ borderBottom:'2px solid #f0f0f0' }}>
-                    <th style={{ textAlign:'left', padding:'6px 8px', color:'#5f6368', fontWeight:500 }}>Type</th>
-                    <th style={{ textAlign:'right', padding:'6px 8px', color:'#5f6368', fontWeight:500 }}>Count</th>
-                    <th style={{ textAlign:'right', padding:'6px 8px', color:'#5f6368', fontWeight:500 }}>%</th>
+                <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
+                  <tr style={{ borderBottom:'2px solid #e0e0e0' }}>
+                    <th style={thStyle('name')} onClick={() => handleSort('name')}>
+                      Type <SortIcon col="name" sortKey={sortKey} sortDir={sortDir} />
+                    </th>
+                    <th style={thStyle('value')} onClick={() => handleSort('value')}>
+                      Count <SortIcon col="value" sortKey={sortKey} sortDir={sortDir} />
+                    </th>
+                    <th style={thStyle('pct')} onClick={() => handleSort('pct')}>
+                      % <SortIcon col="pct" sortKey={sortKey} sortDir={sortDir} />
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {disabilityData.map((d, i) => (
-                    <tr key={i} style={{ borderBottom:'1px solid #f8f9fa' }}>
-                      <td style={{ padding:'7px 8px', color:'#202124' }}>
-                        <span style={{
-                          display:'inline-block', width:10, height:10,
-                          borderRadius:'50%', background:COLORS[i%COLORS.length],
-                          marginRight:8
-                        }} />
-                        {d.name}
-                      </td>
-                      <td style={{ padding:'7px 8px', textAlign:'right', fontWeight:500, color:'#202124' }}>
-                        {d.value.toLocaleString()}
-                      </td>
-                      <td style={{ padding:'7px 8px', textAlign:'right', color:'#5f6368' }}>
-                        {d.pct}%
-                      </td>
-                    </tr>
-                  ))}
+                  {sortedData.map((d, i) => {
+                    const origIdx = disabilityData.findIndex(x => x.name === d.name)
+                    const isHighlighted = highlight && d.name === highlight
+                    return (
+                      <tr key={i} onClick={() => setHighlight(highlight === d.name ? null : d.name)}
+                        style={{
+                          borderBottom:'1px solid #f8f9fa',
+                          background: isHighlighted ? '#e8f0fe' : 'transparent',
+                          cursor: 'pointer',
+                          transition: 'background 0.1s',
+                        }}
+                        onMouseEnter={e => { if (!isHighlighted) e.currentTarget.style.background = '#f8f9fa' }}
+                        onMouseLeave={e => { if (!isHighlighted) e.currentTarget.style.background = '' }}>
+                        <td style={{ padding:'7px 10px', color:'#202124' }}>
+                          <span style={{
+                            display:'inline-block', width:10, height:10,
+                            borderRadius:'50%', background:COLORS[origIdx%COLORS.length],
+                            marginRight:8
+                          }} />
+                          {d.name}
+                        </td>
+                        <td style={{ padding:'7px 10px', textAlign:'right', fontWeight:600, color:'#202124' }}>
+                          {d.value.toLocaleString()}
+                        </td>
+                        <td style={{ padding:'7px 10px', textAlign:'right', color:'#5f6368' }}>
+                          {d.pct}%
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>

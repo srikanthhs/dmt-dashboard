@@ -1,17 +1,27 @@
-export default function StatCard({ label, value, sub, icon: Icon, color = '#1a73e8', trend }) {
+import { useState } from 'react'
+
+export default function StatCard({ label, value, sub, icon: Icon, color = '#1a73e8', trend, onClick }) {
+  const [hovered, setHovered] = useState(false)
   return (
-    <div style={{
-      background: '#fff',
-      borderRadius: 12,
-      padding: '20px 24px',
-      display: 'flex',
-      alignItems: 'flex-start',
-      gap: 16,
-      boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-      border: '1px solid #f0f0f0',
-      flex: 1,
-      minWidth: 160,
-    }}>
+    <div
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: '#fff',
+        borderRadius: 12,
+        padding: '20px 24px',
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: 16,
+        boxShadow: hovered && onClick ? '0 4px 16px rgba(0,0,0,0.12)' : '0 1px 3px rgba(0,0,0,0.08)',
+        border: hovered && onClick ? `1px solid ${color}80` : '1px solid #f0f0f0',
+        flex: 1,
+        minWidth: 160,
+        cursor: onClick ? 'pointer' : 'default',
+        transition: 'box-shadow 0.15s, border-color 0.15s',
+        transform: hovered && onClick ? 'translateY(-1px)' : 'none',
+      }}>
       <div style={{
         width: 48, height: 48, borderRadius: 12,
         background: color + '18',
@@ -40,6 +50,11 @@ export default function StatCard({ label, value, sub, icon: Icon, color = '#1a73
             fontWeight: 500,
           }}>
             {trend >= 0 ? '▲' : '▼'} {Math.abs(trend)}%
+          </div>
+        )}
+        {onClick && (
+          <div style={{ fontSize: 11, color: color, marginTop: 6, fontWeight: 500, opacity: hovered ? 1 : 0, transition: 'opacity 0.15s' }}>
+            Click to explore →
           </div>
         )}
       </div>

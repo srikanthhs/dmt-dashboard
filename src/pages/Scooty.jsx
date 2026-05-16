@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import {
   BarChart, Bar, Cell, Tooltip, ResponsiveContainer, XAxis, YAxis,
-  CartesianGrid, PieChart, Pie, Legend, LineChart, Line
+  CartesianGrid, PieChart, Pie, Legend, LineChart, Line, LabelList
 } from 'recharts'
 import ChartCard from '../components/ChartCard'
 import TopBar from '../components/TopBar'
@@ -39,8 +39,33 @@ export default function Scooty() {
   const [results, setResults] = useState([])
   const [selected, setSelected] = useState(null)
   const [loaded, setLoaded] = useState(false)
+  const [sortKey, setSortKey] = useState('n')
+  const [sortDir, setSortDir] = useState('asc')
   const dataRef = useRef(null)
   const inputRef = useRef()
+
+  const handleSort = (key) => {
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortKey(key); setSortDir('asc') }
+  }
+
+  const sortedResults = [...results].sort((a, b) => {
+    const av = a[sortKey] ?? ''
+    const bv = b[sortKey] ?? ''
+    const cmp = String(av).localeCompare(String(bv), undefined, { numeric: true })
+    return sortDir === 'asc' ? cmp : -cmp
+  })
+
+  const SortIcon = ({ col }) => {
+    if (sortKey !== col) return <span style={{ color: '#d0d0d0', fontSize: 10 }}> ⇅</span>
+    return <span style={{ color: '#1a73e8', fontSize: 10 }}>{sortDir === 'asc' ? ' ↑' : ' ↓'}</span>
+  }
+
+  const thStyle = (key) => ({
+    textAlign: 'left', padding: '9px 10px',
+    color: sortKey === key ? '#1a73e8' : '#5f6368',
+    fontWeight: 500, cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap',
+  })
 
   useEffect(() => {
     if (cachedScooty) { dataRef.current = cachedScooty; setLoaded(true); return }
@@ -86,13 +111,14 @@ export default function Scooty() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
           <ChartCard title="Year-wise Distribution">
             <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={yearData} margin={{ top: 4, right: 8 }}>
+              <BarChart data={yearData} margin={{ top: 24, right: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                 <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#5f6368' }} />
                 <YAxis tick={{ fontSize: 11, fill: '#5f6368' }} />
                 <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="value" radius={[6, 6, 0, 0]}>
                   {yearData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                  <LabelList dataKey="value" position="top" style={{ fontSize: 11, fill: '#5f6368', fontWeight: 600 }} />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -110,7 +136,9 @@ export default function Scooty() {
             <ResponsiveContainer width="100%" height={240}>
               <PieChart>
                 <Pie data={genderData} cx="50%" cy="50%" innerRadius={60} outerRadius={90}
-                  dataKey="value" paddingAngle={4}>
+                  dataKey="value" paddingAngle={4}
+                  label={({ value, percent }) => percent > 0.05 ? value.toLocaleString() : ''}
+                  labelLine={false}>
                   <Cell fill="#1a73e8" />
                   <Cell fill="#ea4335" />
                 </Pie>
@@ -134,13 +162,14 @@ export default function Scooty() {
         <div style={{ marginBottom: 24 }}>
           <ChartCard title="Disability Percentage Distribution">
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={disData} margin={{ top: 4, right: 8 }}>
+              <BarChart data={disData} margin={{ top: 24, right: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                 <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#5f6368' }} />
                 <YAxis tick={{ fontSize: 11, fill: '#5f6368' }} />
                 <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="value" fill="#1a73e8" radius={[4, 4, 0, 0]}>
                   {disData.map((_, i) => <Cell key={i} fill={`hsl(${210 + i * 12},75%,${50 + i * 2}%)`} />)}
+                  <LabelList dataKey="value" position="top" style={{ fontSize: 11, fill: '#5f6368', fontWeight: 500 }} />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -176,16 +205,24 @@ export default function Scooty() {
           {/* Results table */}
           {results.length > 0 && (
             <div style={{ overflowX: 'auto' }}>
+              <div style={{ fontSize: 12, color: '#5f6368', marginBottom: 6 }}>
+                {results.length} result{results.length !== 1 ? 's' : ''} · Click column headers to sort
+              </div>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
                   <tr style={{ background: '#f8f9fa', borderBottom: '2px solid #e0e0e0' }}>
-                    {['Name', 'Age/Gender', 'Mobile', 'Aadhaar', 'UDID', 'Vehicle No', 'F.Y.', ''].map(h => (
-                      <th key={h} style={{ textAlign: 'left', padding: '9px 10px', color: '#5f6368', fontWeight: 500, whiteSpace: 'nowrap' }}>{h}</th>
-                    ))}
+                    <th style={thStyle('n')} onClick={() => handleSort('n')}>Name <SortIcon col="n" /></th>
+                    <th style={thStyle('age')} onClick={() => handleSort('age')}>Age/Gender <SortIcon col="age" /></th>
+                    <th style={thStyle('mob')} onClick={() => handleSort('mob')}>Mobile <SortIcon col="mob" /></th>
+                    <th style={thStyle('aadhar')} onClick={() => handleSort('aadhar')}>Aadhaar <SortIcon col="aadhar" /></th>
+                    <th style={thStyle('udid')} onClick={() => handleSort('udid')}>UDID <SortIcon col="udid" /></th>
+                    <th style={thStyle('veh')} onClick={() => handleSort('veh')}>Vehicle No <SortIcon col="veh" /></th>
+                    <th style={thStyle('fy')} onClick={() => handleSort('fy')}>F.Y. <SortIcon col="fy" /></th>
+                    <th style={{ padding: '9px 10px' }}></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {results.map((r, i) => (
+                  {sortedResults.map((r, i) => (
                     <tr key={i}
                       onClick={() => setSelected(r)}
                       style={{ borderBottom: '1px solid #f0f0f0', cursor: 'pointer', transition: 'background 0.1s' }}
