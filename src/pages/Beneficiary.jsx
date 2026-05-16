@@ -86,9 +86,13 @@ function applyFilter(records, params) {
     if (params.dis && !r.dis?.toLowerCase().includes(params.dis.toLowerCase())) return false
     if (params.caste && r.caste !== params.caste) return false
     if (params.hstat && r.hstat !== params.hstat) return false
+    if (params.htype && r.htype !== params.htype) return false
     if (params.elec && r.elec !== params.elec) return false
     if (params.water && r.water !== params.water) return false
     if (params.toilet && r.toilet !== params.toilet) return false
+    if (params.edu && r.edu?.toLowerCase() !== params.edu.toLowerCase()) return false
+    if (params.etype && !r.etype?.toLowerCase().includes(params.etype.toLowerCase())) return false
+    if (params.mar && r.mar !== params.mar) return false
     return true
   })
 }
@@ -105,9 +109,13 @@ function getFilterLabel(params) {
     dis:    v => `Disability: ${v}`,
     caste:  v => `Caste: ${v}`,
     hstat:  v => `House Ownership: ${v}`,
+    htype:  v => `House Type: ${v}`,
     elec:   v => `Electricity: ${v}`,
     water:  v => `Water Source: ${v}`,
     toilet: v => `Toilet: ${v}`,
+    edu:    v => `Education: ${v}`,
+    etype:  v => `Employment Type: ${v}`,
+    mar:    v => `Marital Status: ${v}`,
   }
   return Object.entries(params).map(([k, v]) => labels[k]?.(v) || `${k}: ${v}`).join(' · ')
 }

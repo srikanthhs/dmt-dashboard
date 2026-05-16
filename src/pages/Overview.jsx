@@ -49,24 +49,28 @@ const insights = [
     label: 'Employment Crisis',
     value: `${((stats.employed / stats.total) * 100).toFixed(1)}%`,
     sub: `Only ${stats.employed.toLocaleString()} of ${stats.total.toLocaleString()} are employed`,
+    filter: '/beneficiary?emp=no',
   },
   {
     color: '#fbbc04', icon: AlertCircle,
     label: 'UDID Gap',
     value: (stats.total - stats.udid_holders).toLocaleString(),
     sub: `${(((stats.total - stats.udid_holders) / stats.total) * 100).toFixed(1)}% still awaiting UDID card`,
+    filter: '/beneficiary?udid=no',
   },
   {
     color: '#9334e6', icon: Home,
     label: 'Sanitation Gap',
     value: (stats.total - stats.toilet['Individual Toilet']).toLocaleString(),
     sub: `${(((stats.total - stats.toilet['Individual Toilet']) / stats.total) * 100).toFixed(1)}% lack individual toilet`,
+    filter: '/beneficiary?toilet=Open Defecation',
   },
   {
     color: '#34a853', icon: ShieldCheck,
     label: 'Aadhaar Coverage',
     value: `${((stats.aadhaar_linked / stats.total) * 100).toFixed(1)}%`,
     sub: `${stats.aadhaar_linked.toLocaleString()} persons have Aadhaar linked`,
+    filter: '/beneficiary?aad=yes',
   },
 ]
 
@@ -108,13 +112,17 @@ export default function Overview() {
           {insights.map((item, i) => {
             const Icon = item.icon
             return (
-              <div key={i} style={{
+              <div key={i} onClick={() => navigate(item.filter)} style={{
                 flex: 1, minWidth: 200,
                 background: item.color + '10',
                 border: `1px solid ${item.color}30`,
                 borderLeft: `4px solid ${item.color}`,
                 borderRadius: 12, padding: '14px 18px',
-              }}>
+                cursor: 'pointer', transition: 'box-shadow 0.15s',
+              }}
+                onMouseEnter={e => e.currentTarget.style.boxShadow = `0 4px 16px ${item.color}30`}
+                onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
+              >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                   <Icon size={16} color={item.color} />
                   <span style={{ fontSize: 11, fontWeight: 700, color: item.color, textTransform: 'uppercase', letterSpacing: 0.5 }}>
@@ -249,20 +257,29 @@ export default function Overview() {
           <ChartCard title="Quick Facts" subtitle="Key numbers at a glance">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '8px 0' }}>
               {[
-                { label: 'Persons with Permanent Disability', value: stats.permanent_disability.toLocaleString(), pct: `${((stats.permanent_disability/stats.total)*100).toFixed(1)}%`, color: '#ea4335' },
-                { label: 'Working-age persons (21–60)', value: (['21-30','31-40','41-50','51-60'].reduce((s,k)=>s+stats.age_groups[k],0)).toLocaleString(), pct: `${((['21-30','31-40','41-50','51-60'].reduce((s,k)=>s+stats.age_groups[k],0)/stats.total)*100).toFixed(1)}%`, color: '#1a73e8' },
-                { label: 'Open defecation (no toilet)', value: stats.toilet['Open Defecation'].toLocaleString(), pct: `${((stats.toilet['Open Defecation']/stats.total)*100).toFixed(1)}%`, color: '#9334e6' },
-                { label: 'Kutcha / vulnerable housing', value: stats.house_type.Kutcha.toLocaleString(), pct: `${((stats.house_type.Kutcha/stats.total)*100).toFixed(1)}%`, color: '#ff7043' },
-                { label: 'No electricity access', value: stats.electricity.No.toLocaleString(), pct: `${((stats.electricity.No/(stats.electricity.Yes+stats.electricity.No))*100).toFixed(1)}%`, color: '#fbbc04' },
-                { label: 'Government employees', value: stats.employment_type.Government.toLocaleString(), pct: `${((stats.employment_type.Government/stats.total)*100).toFixed(2)}%`, color: '#34a853' },
-                { label: 'Widow / Deserted / Divorced', value: (stats.marital.Widow+(stats.marital.Deserted||0)+(stats.marital.Divorced||0)).toLocaleString(), pct: '', color: '#00acc1' },
-                { label: 'Scheduled Caste (SC)', value: stats.caste['Scheduled Caste'].toLocaleString(), pct: `${((stats.caste['Scheduled Caste']/stats.total)*100).toFixed(1)}%`, color: '#8d6e63' },
+                { label: 'Persons with Permanent Disability', value: stats.permanent_disability.toLocaleString(), pct: `${((stats.permanent_disability/stats.total)*100).toFixed(1)}%`, color: '#ea4335', to: '/beneficiary?nat=Permanent' },
+                { label: 'Working-age persons (21–60)', value: (['21-30','31-40','41-50','51-60'].reduce((s,k)=>s+stats.age_groups[k],0)).toLocaleString(), pct: `${((['21-30','31-40','41-50','51-60'].reduce((s,k)=>s+stats.age_groups[k],0)/stats.total)*100).toFixed(1)}%`, color: '#1a73e8', to: null },
+                { label: 'Open defecation (no toilet)', value: stats.toilet['Open Defecation'].toLocaleString(), pct: `${((stats.toilet['Open Defecation']/stats.total)*100).toFixed(1)}%`, color: '#9334e6', to: '/beneficiary?toilet=Not Available' },
+                { label: 'Kutcha / vulnerable housing', value: stats.house_type.Kutcha.toLocaleString(), pct: `${((stats.house_type.Kutcha/stats.total)*100).toFixed(1)}%`, color: '#ff7043', to: '/beneficiary?htype=Thatched' },
+                { label: 'No electricity access', value: stats.electricity.No.toLocaleString(), pct: `${((stats.electricity.No/(stats.electricity.Yes+stats.electricity.No))*100).toFixed(1)}%`, color: '#fbbc04', to: '/beneficiary?elec=No' },
+                { label: 'Government employees', value: stats.employment_type.Government.toLocaleString(), pct: `${((stats.employment_type.Government/stats.total)*100).toFixed(2)}%`, color: '#34a853', to: '/beneficiary?etype=Government' },
+                { label: 'Widow / Deserted / Divorced', value: (stats.marital.Widow+(stats.marital.Deserted||0)+(stats.marital.Divorced||0)).toLocaleString(), pct: '', color: '#00acc1', to: '/beneficiary?mar=Widow' },
+                { label: 'Scheduled Caste (SC)', value: stats.caste['Scheduled Caste'].toLocaleString(), pct: `${((stats.caste['Scheduled Caste']/stats.total)*100).toFixed(1)}%`, color: '#8d6e63', to: '/beneficiary?caste=Scheduled Caste' },
               ].map((item, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '6px 0', borderBottom: '1px solid #f8f9fa' }}>
+                <div key={i} onClick={() => item.to && navigate(item.to)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '6px 0', borderBottom: '1px solid #f8f9fa',
+                    cursor: item.to ? 'pointer' : 'default',
+                    borderRadius: 4, transition: 'background 0.1s',
+                  }}
+                  onMouseEnter={e => { if (item.to) e.currentTarget.style.background = '#f8f9fa' }}
+                  onMouseLeave={e => e.currentTarget.style.background = ''}>
                   <div style={{ width: 10, height: 10, borderRadius: '50%', background: item.color, flexShrink: 0 }} />
                   <div style={{ flex: 1, fontSize: 13, color: '#3c4043' }}>{item.label}</div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: '#202124' }}>{item.value}</div>
                   {item.pct && <div style={{ fontSize: 11, color: '#9aa0a6', minWidth: 40, textAlign: 'right' }}>{item.pct}</div>}
+                  {item.to && <div style={{ fontSize: 10, color: '#1a73e8', opacity: 0.6 }}>→</div>}
                 </div>
               ))}
             </div>

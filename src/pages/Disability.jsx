@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   BarChart, Bar, PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
   Legend, XAxis, YAxis, CartesianGrid, LabelList
@@ -33,6 +34,7 @@ const SortIcon = ({ col, sortKey, sortDir }) => {
 }
 
 export default function Disability() {
+  const navigate = useNavigate()
   const top1 = disabilityData[0]
   const [sortKey, setSortKey] = useState('value')
   const [sortDir, setSortDir] = useState('desc')
@@ -59,6 +61,7 @@ export default function Disability() {
     userSelect: 'none',
     whiteSpace: 'nowrap',
     background: '#f8f9fa',
+    borderBottom: '2px solid #e0e0e0',
   })
 
   return (
@@ -69,16 +72,16 @@ export default function Disability() {
         <div style={{ display:'flex', gap:16, flexWrap:'wrap', marginBottom:24 }}>
           <StatCard label="Most Common Disability" value={top1.value}
             icon={Activity} color="#1a73e8" sub={top1.name}
-            onClick={() => setHighlight(top1.name)} />
+            onClick={() => navigate(`/beneficiary?dis=${encodeURIComponent(top1.name.split(' ')[0])}`)} />
           <StatCard label="Permanent Cases" value={stats.permanent_disability}
             icon={Zap} color="#ea4335" sub="Nature of disability"
-            onClick={() => setHighlight('Permanent')} />
+            onClick={() => navigate('/beneficiary?nat=Permanent')} />
           <StatCard label="Hearing Impairment" value={stats.disability_type['Hearing Impairment']}
             icon={Heart} color="#34a853" sub="Type 9"
-            onClick={() => setHighlight('Hearing Impairment')} />
+            onClick={() => navigate('/beneficiary?dis=HH')} />
           <StatCard label="Visual Impairment" value={(stats.disability_type['Blindness'] || 0) + (stats.disability_type['Low Vision'] || 0)}
             icon={Eye} color="#fbbc04" sub="Blindness + Low Vision"
-            onClick={() => setHighlight('Blindness')} />
+            onClick={() => navigate('/beneficiary?dis=Blindness')} />
         </div>
 
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:16 }}>
@@ -90,7 +93,8 @@ export default function Disability() {
                   angle={-30} textAnchor="end" height={60} />
                 <YAxis tick={{ fontSize:11, fill:'#5f6368' }} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" radius={[4,4,0,0]}>
+                <Bar dataKey="value" radius={[4,4,0,0]} style={{ cursor:'pointer' }}
+                  onClick={(data) => navigate(`/beneficiary?dis=${encodeURIComponent(data.name.split('(')[0].trim())}`)}>
                   {disabilityData.map((d, i) => (
                     <Cell key={i} fill={COLORS[i % COLORS.length]}
                       opacity={highlight && d.name !== highlight && highlight !== 'Permanent' ? 0.35 : 1} />
@@ -99,6 +103,7 @@ export default function Disability() {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
+            <p style={{ fontSize:11, color:'#9aa0a6', textAlign:'center', marginTop:4 }}>Click any bar to view those beneficiaries</p>
           </ChartCard>
         </div>
 
@@ -109,7 +114,9 @@ export default function Disability() {
                 <Pie data={natureData} cx="50%" cy="50%" innerRadius={60} outerRadius={90}
                   dataKey="value" paddingAngle={4}
                   label={({ value, percent }) => percent > 0.05 ? value.toLocaleString() : ''}
-                  labelLine={false}>
+                  labelLine={false}
+                  style={{ cursor:'pointer' }}
+                  onClick={(data) => navigate(`/beneficiary?nat=${encodeURIComponent(data.name)}`)}>
                   <Cell fill="#1a73e8" />
                   <Cell fill="#fbbc04" />
                 </Pie>
@@ -120,7 +127,8 @@ export default function Disability() {
             </ResponsiveContainer>
             <div style={{ display:'flex', justifyContent:'center', gap:32, marginTop:8 }}>
               {natureData.map((d, i) => (
-                <div key={i} style={{ textAlign:'center' }}>
+                <div key={i} onClick={() => navigate(`/beneficiary?nat=${encodeURIComponent(d.name)}`)}
+                  style={{ textAlign:'center', cursor:'pointer' }}>
                   <div style={{ fontSize:22, fontWeight:700, color:i===0?'#1a73e8':'#fbbc04' }}>
                     {((d.value / stats.total) * 100).toFixed(1)}%
                   </div>
@@ -128,20 +136,20 @@ export default function Disability() {
                 </div>
               ))}
             </div>
+            <p style={{ fontSize:11, color:'#9aa0a6', textAlign:'center', marginTop:8 }}>Click to view beneficiaries</p>
           </ChartCard>
 
-          {/* Sortable table */}
           <ChartCard title="Disability Breakdown Table">
             {highlight && (
               <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 12, color: '#1a73e8', fontWeight: 500 }}>Filtered: {highlight}</span>
+                <span style={{ fontSize: 12, color: '#1a73e8', fontWeight: 500 }}>Highlighted: {highlight}</span>
                 <button onClick={() => setHighlight(null)} style={{ fontSize: 11, color: '#ea4335', background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px' }}>✕ clear</button>
               </div>
             )}
             <div style={{ overflowY:'auto', maxHeight:280 }}>
               <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13 }}>
                 <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
-                  <tr style={{ borderBottom:'2px solid #e0e0e0' }}>
+                  <tr>
                     <th style={thStyle('name')} onClick={() => handleSort('name')}>
                       Type <SortIcon col="name" sortKey={sortKey} sortDir={sortDir} />
                     </th>
@@ -156,9 +164,11 @@ export default function Disability() {
                 <tbody>
                   {sortedData.map((d, i) => {
                     const origIdx = disabilityData.findIndex(x => x.name === d.name)
-                    const isHighlighted = highlight && d.name === highlight
+                    const isHighlighted = highlight === d.name
+                    const disKey = d.name.split('(')[0].trim()
                     return (
-                      <tr key={i} onClick={() => setHighlight(highlight === d.name ? null : d.name)}
+                      <tr key={i}
+                        onClick={() => navigate(`/beneficiary?dis=${encodeURIComponent(disKey)}`)}
                         style={{
                           borderBottom:'1px solid #f8f9fa',
                           background: isHighlighted ? '#e8f0fe' : 'transparent',
@@ -175,7 +185,7 @@ export default function Disability() {
                           }} />
                           {d.name}
                         </td>
-                        <td style={{ padding:'7px 10px', textAlign:'right', fontWeight:600, color:'#202124' }}>
+                        <td style={{ padding:'7px 10px', textAlign:'right', fontWeight:600, color:'#1a73e8' }}>
                           {d.value.toLocaleString()}
                         </td>
                         <td style={{ padding:'7px 10px', textAlign:'right', color:'#5f6368' }}>
@@ -187,6 +197,7 @@ export default function Disability() {
                 </tbody>
               </table>
             </div>
+            <p style={{ fontSize:11, color:'#9aa0a6', marginTop:8 }}>Click any row to view those beneficiaries</p>
           </ChartCard>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   BarChart, Bar, Cell, Tooltip, ResponsiveContainer, XAxis, YAxis, CartesianGrid, LabelList
 } from 'recharts'
@@ -36,6 +37,7 @@ export default function Education() {
   const noFormal = stats.education['No Formal Education'] || 0
   const primary = (stats.education['Upto 5th Std'] || 0) + (stats.education['Below 5th Std'] || 0)
 
+  const navigate = useNavigate()
   const [sortKey, setSortKey] = useState('value')
   const [sortDir, setSortDir] = useState('desc')
   const [highlight, setHighlight] = useState(null)
@@ -72,19 +74,19 @@ export default function Education() {
           <StatCard label="Higher Education" value={higherEdu}
             icon={GraduationCap} color="#1a73e8"
             sub={`${((higherEdu/stats.total)*100).toFixed(1)}% of total`}
-            onClick={() => setHighlight('Under Graduate')} />
+            onClick={() => navigate('/beneficiary?edu=Under Graduate')} />
           <StatCard label="No Formal Education" value={noFormal}
             icon={BookOpen} color="#ea4335"
             sub={`${((noFormal/stats.total)*100).toFixed(1)}% of total`}
-            onClick={() => setHighlight('No Formal Education')} />
+            onClick={() => navigate('/beneficiary?edu=No Formal education')} />
           <StatCard label="Primary Level" value={primary}
             icon={School} color="#fbbc04"
             sub="Up to 5th standard"
-            onClick={() => setHighlight('Upto 5th Std')} />
+            onClick={() => navigate('/beneficiary?edu=Upto 5th std')} />
           <StatCard label="Ph.D Holders" value={stats.education['Ph.D'] || 16}
             icon={Award} color="#34a853"
             sub="Highest qualification"
-            onClick={() => setHighlight('Ph.D')} />
+            onClick={() => navigate('/beneficiary?edu=Ph.D')} />
         </div>
 
         <ChartCard title="Education Level Distribution" style={{ marginBottom:16 }}>
@@ -135,7 +137,7 @@ export default function Education() {
                   const isHighlighted = highlight && d.name === highlight
                   return (
                     <tr key={i}
-                      onClick={() => setHighlight(highlight === d.name ? null : d.name)}
+                      onClick={() => navigate(`/beneficiary?edu=${encodeURIComponent(d.name)}`)}
                       style={{
                         borderBottom:'1px solid #f0f0f0',
                         background: isHighlighted ? '#e8f0fe' : 'transparent',

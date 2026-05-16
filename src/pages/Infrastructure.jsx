@@ -48,10 +48,10 @@ export default function Infrastructure() {
             onClick={() => navigate('/beneficiary?elec=Yes')} />
           <StatCard label="Tap Water Access" value={stats.water['Tap Water']}
             icon={Droplets} color="#34a853" sub="Primary water source"
-            onClick={() => navigate('/beneficiary?water=Tap Water')} />
+            onClick={() => navigate('/beneficiary?water=Tap water inside the house')} />
           <StatCard label="Individual Toilet" value={stats.toilet['Individual Toilet']}
             icon={Wind} color="#9334e6" sub="Sanitation access"
-            onClick={() => navigate('/beneficiary?toilet=Individual Toilet')} />
+            onClick={() => navigate('/beneficiary?toilet=Own')} />
         </div>
 
         <div ref={houseRef} style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:16 }}>
