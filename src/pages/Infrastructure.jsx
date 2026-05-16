@@ -66,7 +66,7 @@ export default function Infrastructure() {
                     <Cell key={i} fill={COLORS[i]} />
                   ))}
                 </Pie>
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={<CustomTooltip />} cursor={false} />
               </PieChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -81,7 +81,7 @@ export default function Infrastructure() {
                   ))}
                   <LabelList dataKey="value" position="top" style={{ fontSize: 10, fill: '#5f6368', fontWeight: 500 }} formatter={v => v.toLocaleString()} />
                 </Bar>
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={<CustomTooltip />} cursor={false} />
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -100,7 +100,7 @@ export default function Infrastructure() {
                       <Cell key={i} fill={COLORS[i % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip content={<CustomTooltip />} cursor={false} />
                   <Legend iconType="circle" iconSize={10}
                     formatter={v => <span style={{ fontSize:11, color:'#3c4043' }}>{v}</span>} />
                 </PieChart>
@@ -120,7 +120,7 @@ export default function Infrastructure() {
                     <Cell fill="#1a73e8" />
                     <Cell fill="#ea4335" />
                   </Pie>
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip content={<CustomTooltip />} cursor={false} />
                   <Legend iconType="circle" iconSize={10}
                     formatter={v => <span style={{ fontSize:11, color:'#3c4043' }}>{v}</span>} />
                 </PieChart>

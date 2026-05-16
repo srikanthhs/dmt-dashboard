@@ -201,7 +201,7 @@ export default function Benefits() {
                     <Cell fill="#1a73e8" />
                     <Cell fill="#f1f3f4" />
                   </Pie>
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip content={<CustomTooltip />} cursor={false} />
                   <Legend iconType="circle" iconSize={10}
                     formatter={v => <span style={{ fontSize:12, color:'#3c4043' }}>{v}</span>} />
                 </PieChart>
@@ -224,7 +224,7 @@ export default function Benefits() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                 <XAxis dataKey="name" tick={{ fontSize:13, fill:'#5f6368' }} />
                 <YAxis tick={{ fontSize:11, fill:'#5f6368' }} />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={<CustomTooltip />} cursor={false} />
                 <Legend iconType="circle" iconSize={10}
                   formatter={v => <span style={{ fontSize:12, color:'#3c4043' }}>{v}</span>} />
                 <Bar dataKey="Issued" fill="#34a853" radius={[4,4,0,0]}>
@@ -249,7 +249,7 @@ export default function Benefits() {
                   <Cell fill="#ea4335" />
                   <LabelList dataKey="value" position="top" style={{ fontSize: 12, fill: '#5f6368', fontWeight: 600 }} formatter={v => v.toLocaleString()} />
                 </Bar>
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={<CustomTooltip />} cursor={false} />
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>

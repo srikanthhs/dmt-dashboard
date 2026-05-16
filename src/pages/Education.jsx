@@ -96,7 +96,7 @@ export default function Education() {
               <XAxis dataKey="name" tick={{ fontSize:10, fill:'#5f6368' }}
                 angle={-35} textAnchor="end" height={70} />
               <YAxis tick={{ fontSize:11, fill:'#5f6368' }} />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CustomTooltip />} cursor={false} />
               <Bar dataKey="value" radius={[4,4,0,0]}>
                 {eduData.map((d, i) => (
                   <Cell key={i} fill={COLORS[i % COLORS.length]}

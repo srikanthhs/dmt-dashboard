@@ -82,7 +82,7 @@ export default function Livelihood() {
                     <Cell fill="#ea4335" />
                     <Cell fill="#f1f3f4" />
                   </Pie>
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip content={<CustomTooltip />} cursor={false} />
                   <Legend iconType="circle" iconSize={10}
                     formatter={v => <span style={{ fontSize:12, color:'#3c4043' }}>{v}</span>} />
                 </PieChart>
@@ -107,7 +107,7 @@ export default function Livelihood() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                   <XAxis dataKey="name" tick={{ fontSize:11, fill:'#5f6368' }} />
                   <YAxis tick={{ fontSize:11, fill:'#5f6368' }} />
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip content={<CustomTooltip />} cursor={false} />
                   <Bar dataKey="value" radius={[4,4,0,0]}>
                     {empTypeData.map((_, i) => (
                       <Cell key={i} fill={COLORS[i % COLORS.length]} />
@@ -128,7 +128,7 @@ export default function Livelihood() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
                 <XAxis type="number" tick={{ fontSize:11, fill:'#5f6368' }} />
                 <YAxis type="category" dataKey="name" tick={{ fontSize:12, fill:'#3c4043' }} width={120} />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={<CustomTooltip />} cursor={false} />
                 <Bar dataKey="value" radius={[0,4,4,0]}>
                   {empTypeHBar.map((_, i) => (
                     <Cell key={i} fill={COLORS[i % COLORS.length]} />
@@ -153,7 +153,7 @@ export default function Livelihood() {
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                     <XAxis dataKey="name" tick={{ fontSize:10, fill:'#5f6368' }} />
                     <YAxis tick={{ fontSize:11, fill:'#5f6368' }} />
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip content={<CustomTooltip />} cursor={false} />
                     <Bar dataKey="value" radius={[4,4,0,0]}>
                       {incomeBands.map((d, i) => (
                         <Cell key={i} fill={d.color} />

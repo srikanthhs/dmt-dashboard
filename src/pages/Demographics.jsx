@@ -107,7 +107,7 @@ export default function Demographics() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                   <XAxis dataKey="name" tick={{ fontSize:12, fill:'#5f6368' }} />
                   <YAxis tick={{ fontSize:11, fill:'#5f6368' }} />
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip content={<CustomTooltip />} cursor={false} />
                   <Bar dataKey="value" fill="#1a73e8" radius={[4,4,0,0]}>
                     {ageData.map((_, i) => (
                       <Cell key={i} fill={`hsl(${210 + i * 8}, 80%, ${45 + i * 3}%)`} />
@@ -132,7 +132,7 @@ export default function Demographics() {
                         <Cell key={i} fill={COLORS[i]} />
                       ))}
                     </Pie>
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip content={<CustomTooltip />} cursor={false} />
                   </PieChart>
                 </ResponsiveContainer>
                 <ResponsiveContainer width="100%" height="100%">
@@ -144,7 +144,7 @@ export default function Demographics() {
                       <Cell fill="#34a853" />
                       <Cell fill="#1a73e8" />
                     </Pie>
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip content={<CustomTooltip />} cursor={false} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -164,7 +164,7 @@ export default function Demographics() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
                   <XAxis type="number" tick={{ fontSize:11, fill:'#5f6368' }} />
                   <YAxis type="category" dataKey="name" tick={{ fontSize:10, fill:'#5f6368' }} width={150} />
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip content={<CustomTooltip />} cursor={false} />
                   <Bar dataKey="value" radius={[0,4,4,0]}>
                     {casteData.map((_, i) => (
                       <Cell key={i} fill={COLORS[i % COLORS.length]} />
@@ -188,7 +188,7 @@ export default function Demographics() {
                       <Cell key={i} fill={COLORS[i % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip content={<CustomTooltip />} cursor={false} />
                   <Legend iconType="circle" iconSize={10}
                     formatter={v => <span style={{ fontSize:12, color:'#3c4043' }}>{v}</span>} />
                 </PieChart>

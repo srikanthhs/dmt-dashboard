@@ -92,7 +92,7 @@ export default function Disability() {
                 <XAxis dataKey="name" tick={{ fontSize:10, fill:'#5f6368' }}
                   angle={-30} textAnchor="end" height={60} />
                 <YAxis tick={{ fontSize:11, fill:'#5f6368' }} />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={<CustomTooltip />} cursor={false} />
                 <Bar dataKey="value" radius={[4,4,0,0]} style={{ cursor:'pointer' }}
                   onClick={(data) => navigate(`/beneficiary?dis=${encodeURIComponent(data.name.split('(')[0].trim())}`)}>
                   {disabilityData.map((d, i) => (
@@ -120,7 +120,7 @@ export default function Disability() {
                   <Cell fill="#1a73e8" />
                   <Cell fill="#fbbc04" />
                 </Pie>
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={<CustomTooltip />} cursor={false} />
                 <Legend iconType="circle" iconSize={10}
                   formatter={v => <span style={{ fontSize:12, color:'#3c4043' }}>{v}</span>} />
               </PieChart>

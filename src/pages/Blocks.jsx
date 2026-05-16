@@ -161,7 +161,7 @@ export default function Blocks() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                 <XAxis dataKey="name" tick={{ fontSize:11, fill:'#5f6368' }} />
                 <YAxis tick={{ fontSize:11, fill:'#5f6368' }} />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={<CustomTooltip />} cursor={false} />
                 <Bar dataKey="total" radius={[4,4,0,0]}>
                   {blockOverview.map((b, i) => (
                     <Cell key={i} fill={b.color} />
@@ -178,7 +178,7 @@ export default function Blocks() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                 <XAxis dataKey="name" tick={{ fontSize:10, fill:'#5f6368' }} />
                 <YAxis tick={{ fontSize:10, fill:'#5f6368' }} />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={<CustomTooltip />} cursor={false} />
                 <Legend iconType="circle" iconSize={10}
                   formatter={v => <span style={{ fontSize:10, color:'#3c4043' }}>{v}</span>} />
                 {disabilityKeys.map((key, i) => (
