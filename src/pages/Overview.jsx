@@ -45,7 +45,7 @@ export default function Overview() {
 
   return (
     <div>
-      <TopBar title="Overview" subtitle="Mayiladuthurai District · May 2026 Block-wise Master Data" />
+      <TopBar title="Overview" subtitle="Mayiladuthurai District · Survey Data Jan 2026" />
       <div style={{ padding: '24px' }}>
 
         {/* Stat Cards */}

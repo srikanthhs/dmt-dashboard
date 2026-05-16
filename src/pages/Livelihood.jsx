@@ -41,7 +41,7 @@ export default function Livelihood() {
 
   return (
     <div>
-      <TopBar title="Livelihood" subtitle="Employment status, type and income analysis · Data not collected in May 2026 dataset" />
+      <TopBar title="Livelihood" subtitle="Employment status, type and income analysis" />
       <div style={{ padding:24 }}>
         <div style={{ display:'flex', gap:16, flexWrap:'wrap', marginBottom:24 }}>
           <StatCard label="Currently Employed" value={stats.employed}

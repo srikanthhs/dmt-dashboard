@@ -37,7 +37,7 @@ export default function Infrastructure() {
 
   return (
     <div>
-      <TopBar title="Infrastructure" subtitle="Housing, water, electricity and sanitation · Data not collected in May 2026 dataset" />
+      <TopBar title="Infrastructure" subtitle="Housing, water, electricity and sanitation" />
       <div style={{ padding:24 }}>
         <div style={{ display:'flex', gap:16, flexWrap:'wrap', marginBottom:24 }}>
           <StatCard label="Own House" value={stats.house_status.Own}
