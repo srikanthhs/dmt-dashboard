@@ -13,6 +13,15 @@ import { Users, User, Heart, UserCheck, MapPin } from 'lucide-react'
 const COLORS = ['#1a73e8','#ea4335','#fbbc04','#34a853','#9334e6','#00acc1']
 
 const casteData = Object.entries(stats.caste).map(([n,v]) => ({ name:n, value:v }))
+
+const casteFilterMap = {
+  'Most Backward Classes': 'Most Backward Classes or Denotified Communities',
+}
+const marFilterMap = {
+  "Don't disclose": "Don't want to disclose",
+}
+const getCasteFilter = (name) => casteFilterMap[name] || name
+const getMarFilter = (name) => marFilterMap[name] || name
 const maritalData = Object.entries(stats.marital)
   .filter(([,v]) => v > 20)
   .map(([n,v]) => ({ name:n, value:v }))
@@ -56,7 +65,7 @@ export default function Demographics() {
           <StatCard label="Scheduled Caste" value={stats.caste['Scheduled Caste']} icon={Users} color="#34a853" sub="Largest caste group"
             onClick={() => navigate('/beneficiary?caste=Scheduled Caste')} />
           <StatCard label="Married" value={stats.marital.Married} icon={Heart} color="#9334e6" sub="Marital status"
-            onClick={() => navigate('/beneficiary?g=Male')} />
+            onClick={() => navigate('/beneficiary?mar=Married')} />
         </div>
 
         {/* Insight strip */}
@@ -127,7 +136,9 @@ export default function Demographics() {
                     <Pie data={genderData} cx="50%" cy="45%" outerRadius={75}
                       dataKey="value" paddingAngle={3}
                       label={({ name, percent }) => `${name} ${(percent*100).toFixed(0)}%`}
-                      labelLine={false}>
+                      labelLine={false}
+                      style={{ cursor:'pointer' }}
+                      onClick={(data) => navigate(`/beneficiary?g=${encodeURIComponent(data.name)}`)}>
                       {genderData.map((_, i) => (
                         <Cell key={i} fill={COLORS[i]} />
                       ))}
@@ -140,7 +151,9 @@ export default function Demographics() {
                     <Pie data={areaData} cx="50%" cy="45%" outerRadius={75}
                       dataKey="value" paddingAngle={3}
                       label={({ name, percent }) => `${name} ${(percent*100).toFixed(0)}%`}
-                      labelLine={false}>
+                      labelLine={false}
+                      style={{ cursor:'pointer' }}
+                      onClick={(data) => navigate(`/beneficiary?area=${encodeURIComponent(data.name)}`)}>
                       <Cell fill="#34a853" />
                       <Cell fill="#1a73e8" />
                     </Pie>
@@ -165,7 +178,8 @@ export default function Demographics() {
                   <XAxis type="number" tick={{ fontSize:11, fill:'#5f6368' }} />
                   <YAxis type="category" dataKey="name" tick={{ fontSize:10, fill:'#5f6368' }} width={150} />
                   <Tooltip content={<CustomTooltip />} cursor={false} />
-                  <Bar dataKey="value" radius={[0,4,4,0]}>
+                  <Bar dataKey="value" radius={[0,4,4,0]} style={{ cursor:'pointer' }}
+                    onClick={(data) => navigate(`/beneficiary?caste=${encodeURIComponent(getCasteFilter(data.name))}`)}>
                     {casteData.map((_, i) => (
                       <Cell key={i} fill={COLORS[i % COLORS.length]} />
                     ))}
@@ -183,7 +197,9 @@ export default function Demographics() {
                   <Pie data={maritalData} cx="50%" cy="50%" innerRadius={55} outerRadius={90}
                     dataKey="value" paddingAngle={3}
                     label={({ value, percent }) => percent > 0.05 ? value.toLocaleString() : ''}
-                    labelLine={false}>
+                    labelLine={false}
+                    style={{ cursor:'pointer' }}
+                    onClick={(data) => navigate(`/beneficiary?mar=${encodeURIComponent(getMarFilter(data.name))}`)}>
                     {maritalData.map((_, i) => (
                       <Cell key={i} fill={COLORS[i % COLORS.length]} />
                     ))}

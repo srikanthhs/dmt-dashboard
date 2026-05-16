@@ -26,6 +26,13 @@ const houseTypeData = Object.entries(stats.house_type).map(([n,v]) => ({ name:n,
 const waterData = Object.entries(stats.water).map(([n,v]) => ({ name:n, value:v }))
 const toiletData = Object.entries(stats.toilet).map(([n,v]) => ({ name:n, value:v }))
 
+// Maps stats.js labels → actual beneficiaries.json field values
+const hstatFilterMap = { 'Rented': 'Rent' }
+const htypeFilterMap = { 'Pucca': 'Concrete', 'Semi-Pucca': 'Tiled', 'Kutcha': 'Thatched' }
+const waterFilterMap = { 'Tap Water': 'Tap water inside the house', 'Well Water': 'Common community Tap or Well' }
+const toiletFilterMap = { 'Individual Toilet': 'Own', 'Community Toilet': 'Public', 'Open Defecation': 'Not Available' }
+const getFilter = (map, name) => map[name] || name
+
 export default function Infrastructure() {
   const navigate = useNavigate()
   const elecTotal = stats.electricity.Yes + stats.electricity.No
@@ -61,7 +68,9 @@ export default function Infrastructure() {
                 <Pie data={houseStatusData} cx="50%" cy="50%" outerRadius={85}
                   dataKey="value" paddingAngle={3}
                   label={({ name, value, percent }) => percent > 0.05 ? `${name}: ${value.toLocaleString()}` : ''}
-                  labelLine={false}>
+                  labelLine={false}
+                  style={{ cursor:'pointer' }}
+                  onClick={(data) => navigate(`/beneficiary?hstat=${encodeURIComponent(getFilter(hstatFilterMap, data.name))}`)}>
                   {houseStatusData.map((_, i) => (
                     <Cell key={i} fill={COLORS[i]} />
                   ))}
@@ -75,7 +84,8 @@ export default function Infrastructure() {
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={houseTypeData} margin={{ top:20, right:8 }}>
                 <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#5f6368' }} />
-                <Bar dataKey="value" radius={[4,4,0,0]}>
+                <Bar dataKey="value" radius={[4,4,0,0]} style={{ cursor:'pointer' }}
+                  onClick={(data) => navigate(`/beneficiary?htype=${encodeURIComponent(getFilter(htypeFilterMap, data.name))}`)}>
                   {houseTypeData.map((_, i) => (
                     <Cell key={i} fill={COLORS[i % COLORS.length]} />
                   ))}
@@ -95,7 +105,9 @@ export default function Infrastructure() {
                   <Pie data={waterData} cx="50%" cy="50%" innerRadius={50} outerRadius={85}
                     dataKey="value" paddingAngle={3}
                     label={({ value, percent }) => percent > 0.08 ? value.toLocaleString() : ''}
-                    labelLine={false}>
+                    labelLine={false}
+                    style={{ cursor:'pointer' }}
+                    onClick={(data) => navigate(`/beneficiary?water=${encodeURIComponent(getFilter(waterFilterMap, data.name))}`)}>
                     {waterData.map((_, i) => (
                       <Cell key={i} fill={COLORS[i % COLORS.length]} />
                     ))}
@@ -115,7 +127,9 @@ export default function Infrastructure() {
                   <Pie data={toiletData} cx="50%" cy="50%" innerRadius={50} outerRadius={85}
                     dataKey="value" paddingAngle={3}
                     label={({ value, percent }) => percent > 0.05 ? value.toLocaleString() : ''}
-                    labelLine={false}>
+                    labelLine={false}
+                    style={{ cursor:'pointer' }}
+                    onClick={(data) => navigate(`/beneficiary?toilet=${encodeURIComponent(getFilter(toiletFilterMap, data.name))}`)}>
                     <Cell fill="#34a853" />
                     <Cell fill="#1a73e8" />
                     <Cell fill="#ea4335" />

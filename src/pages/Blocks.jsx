@@ -36,6 +36,14 @@ const stackedData = BLOCKS.map(block => {
 
 const disabilityKeys = ['Locomotor Disability', 'Intellectual Disability', 'Hearing Impairment', 'Mental Illness', 'Blindness']
 
+const disFilterMap = {
+  'Intellectual Disability': 'MR',
+  'Hearing Impairment': 'HH',
+  'Speech & Language': 'Speech and Language',
+  'Haemophilia': 'Hemophilia',
+}
+const getDisFilter = (name) => disFilterMap[name] || name
+
 const SortIcon = ({ col, sortKey, sortDir }) => {
   if (sortKey !== col) return <span style={{ color:'#d0d0d0', fontSize:10 }}> ⇅</span>
   return <span style={{ color:'#1a73e8', fontSize:10 }}>{sortDir === 'asc' ? ' ↑' : ' ↓'}</span>
@@ -134,11 +142,13 @@ export default function Blocks() {
             </div>
           </div>
           {Object.entries(blockData).map(([name, value], i) => (
-            <div key={i} style={{
-              background:'#fff', borderRadius:10, padding:'14px 16px',
-              border:`1px solid ${COLORS[i]}30`, boxShadow:'0 1px 3px rgba(0,0,0,0.06)',
-              cursor: 'pointer', transition: 'box-shadow 0.15s, border-color 0.15s',
-            }}
+            <div key={i}
+              onClick={() => navigate(`/beneficiary?blk=${encodeURIComponent(selected)}&dis=${encodeURIComponent(getDisFilter(name))}`)}
+              style={{
+                background:'#fff', borderRadius:10, padding:'14px 16px',
+                border:`1px solid ${COLORS[i]}30`, boxShadow:'0 1px 3px rgba(0,0,0,0.06)',
+                cursor: 'pointer', transition: 'box-shadow 0.15s, border-color 0.15s',
+              }}
               onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'; e.currentTarget.style.borderColor = COLORS[i] }}
               onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)'; e.currentTarget.style.borderColor = `${COLORS[i]}30` }}
             >
@@ -162,7 +172,8 @@ export default function Blocks() {
                 <XAxis dataKey="name" tick={{ fontSize:11, fill:'#5f6368' }} />
                 <YAxis tick={{ fontSize:11, fill:'#5f6368' }} />
                 <Tooltip content={<CustomTooltip />} cursor={false} />
-                <Bar dataKey="total" radius={[4,4,0,0]}>
+                <Bar dataKey="total" radius={[4,4,0,0]} style={{ cursor:'pointer' }}
+                  onClick={(data) => navigate(`/beneficiary?blk=${encodeURIComponent(data.name)}`)}>
                   {blockOverview.map((b, i) => (
                     <Cell key={i} fill={b.color} />
                   ))}

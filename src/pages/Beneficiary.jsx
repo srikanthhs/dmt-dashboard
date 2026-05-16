@@ -93,6 +93,7 @@ function applyFilter(records, params) {
     if (params.edu && r.edu?.toLowerCase() !== params.edu.toLowerCase()) return false
     if (params.etype && !r.etype?.toLowerCase().includes(params.etype.toLowerCase())) return false
     if (params.mar && r.mar !== params.mar) return false
+    if (params.area && r.area !== params.area) return false
     return true
   })
 }
@@ -116,6 +117,7 @@ function getFilterLabel(params) {
     edu:    v => `Education: ${v}`,
     etype:  v => `Employment Type: ${v}`,
     mar:    v => `Marital Status: ${v}`,
+    area:   v => `Area: ${v}`,
   }
   return Object.entries(params).map(([k, v]) => labels[k]?.(v) || `${k}: ${v}`).join(' · ')
 }

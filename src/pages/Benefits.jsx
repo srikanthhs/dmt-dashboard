@@ -49,6 +49,17 @@ const noUdid = stats.total - stats.udid_holders
 const noNidc = stats.total - stats.nidc_holders
 const noAadhaar = stats.total - stats.aadhaar_linked
 
+const gapNavMap = {
+  UDID:    { yes: '/beneficiary?udid=yes',  no: '/beneficiary?udid=no'  },
+  NIDC:    { yes: '/beneficiary?nidc=yes',  no: '/beneficiary?nidc=no'  },
+  Aadhaar: { yes: '/beneficiary?aad=yes',   no: '/beneficiary?aad=no'   },
+}
+const tableNavMap = {
+  'UDID Card': '/beneficiary?udid=yes',
+  'NIDC Card': '/beneficiary?nidc=yes',
+  'Aadhaar':   '/beneficiary?aad=yes',
+}
+
 const gapData = [
   { name: 'UDID', Issued: stats.udid_holders, Pending: noUdid },
   { name: 'NIDC', Issued: stats.nidc_holders, Pending: noNidc },
@@ -159,11 +170,16 @@ export default function Benefits() {
         {/* Action Priority Strip */}
         <div style={{ display:'flex', gap:12, marginBottom:20, flexWrap:'wrap' }}>
           {priorityItems.map((item, i) => (
-            <div key={i} style={{
-              flex:1, minWidth:220, background:'#fff', borderRadius:10,
-              border:`1px solid ${item.color}30`, borderLeft:`4px solid ${item.color}`,
-              padding:'14px 16px', boxShadow:'0 1px 3px rgba(0,0,0,0.06)',
-            }}>
+            <div key={i}
+              onClick={() => navigate(i === 0 ? '/beneficiary?udid=no' : i === 1 ? '/beneficiary?aad=no' : '/beneficiary?nidc=no')}
+              style={{
+                flex:1, minWidth:220, background:'#fff', borderRadius:10,
+                border:`1px solid ${item.color}30`, borderLeft:`4px solid ${item.color}`,
+                padding:'14px 16px', boxShadow:'0 1px 3px rgba(0,0,0,0.06)',
+                cursor:'pointer', transition:'box-shadow 0.15s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'}
+              onMouseLeave={e => e.currentTarget.style.boxShadow='0 1px 3px rgba(0,0,0,0.06)'}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
                 <div style={{ fontSize:13, fontWeight:600, color:'#202124' }}>{item.doc}</div>
                 <span style={{
@@ -197,7 +213,9 @@ export default function Benefits() {
                   <Pie data={udidData} cx="50%" cy="50%" innerRadius={55} outerRadius={90}
                     dataKey="value" paddingAngle={4}
                     label={({ value, percent }) => percent > 0.05 ? value.toLocaleString() : ''}
-                    labelLine={false}>
+                    labelLine={false}
+                    style={{ cursor:'pointer' }}
+                    onClick={(data) => navigate(data.name === 'UDID Issued' ? '/beneficiary?udid=yes' : '/beneficiary?udid=no')}>
                     <Cell fill="#1a73e8" />
                     <Cell fill="#f1f3f4" />
                   </Pie>
@@ -227,10 +245,12 @@ export default function Benefits() {
                 <Tooltip content={<CustomTooltip />} cursor={false} />
                 <Legend iconType="circle" iconSize={10}
                   formatter={v => <span style={{ fontSize:12, color:'#3c4043' }}>{v}</span>} />
-                <Bar dataKey="Issued" fill="#34a853" radius={[4,4,0,0]}>
+                <Bar dataKey="Issued" fill="#34a853" radius={[4,4,0,0]} style={{ cursor:'pointer' }}
+                  onClick={(data) => navigate(gapNavMap[data.name]?.yes || '#')}>
                   <LabelList dataKey="Issued" position="top" style={{ fontSize:10, fill:'#5f6368', fontWeight:500 }} formatter={v => v.toLocaleString()} />
                 </Bar>
-                <Bar dataKey="Pending" fill="#ea4335" radius={[4,4,0,0]}>
+                <Bar dataKey="Pending" fill="#ea4335" radius={[4,4,0,0]} style={{ cursor:'pointer' }}
+                  onClick={(data) => navigate(gapNavMap[data.name]?.no || '#')}>
                   <LabelList dataKey="Pending" position="top" style={{ fontSize:10, fill:'#5f6368', fontWeight:500 }} formatter={v => v.toLocaleString()} />
                 </Bar>
               </BarChart>
@@ -244,7 +264,8 @@ export default function Benefits() {
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={aadhaarData} margin={{ top:24, right:16 }}>
                 <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#5f6368' }} />
-                <Bar dataKey="value" radius={[6,6,0,0]}>
+                <Bar dataKey="value" radius={[6,6,0,0]} style={{ cursor:'pointer' }}
+                  onClick={(data) => navigate(data.name === 'Linked' ? '/beneficiary?aad=yes' : '/beneficiary?aad=no')}>
                   <Cell fill="#1a73e8" />
                   <Cell fill="#ea4335" />
                   <LabelList dataKey="value" position="top" style={{ fontSize: 12, fill: '#5f6368', fontWeight: 600 }} formatter={v => v.toLocaleString()} />
@@ -270,7 +291,8 @@ export default function Benefits() {
               </thead>
               <tbody>
                 {sortedTable.map((row, i) => (
-                  <tr key={i} style={{ borderBottom:'1px solid #f0f0f0' }}
+                  <tr key={i} style={{ borderBottom:'1px solid #f0f0f0', cursor: tableNavMap[row.doc] ? 'pointer' : 'default' }}
+                    onClick={() => tableNavMap[row.doc] && navigate(tableNavMap[row.doc])}
                     onMouseEnter={e => e.currentTarget.style.background = '#f8f9fa'}
                     onMouseLeave={e => e.currentTarget.style.background = ''}>
                     <td style={{ padding:'9px 12px', color:'#202124', fontWeight:500 }}>{row.doc}</td>

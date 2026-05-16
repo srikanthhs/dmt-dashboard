@@ -29,6 +29,13 @@ const empStatusData = [
 
 const empTypeData = Object.entries(stats.employment_type).map(([n,v]) => ({ name:n, value:v }))
 
+// Maps stats.js employment_type labels → data etype field search strings
+const etypeFilterMap = {
+  'Wage Employment': 'Daily Wage',
+  'Agricultural':   'Agriculture',
+}
+const getEtypeFilter = (name) => etypeFilterMap[name] || name
+
 const empTypeHBar = [...empTypeData].sort((a,b) => b.value - a.value)
 
 const incomeBands = [
@@ -77,7 +84,9 @@ export default function Livelihood() {
                   <Pie data={empStatusData.filter(d => d.value > 0)} cx="50%" cy="50%"
                     innerRadius={60} outerRadius={90} dataKey="value" paddingAngle={4}
                     label={({ value, percent }) => percent > 0.05 ? value.toLocaleString() : ''}
-                    labelLine={false}>
+                    labelLine={false}
+                    style={{ cursor:'pointer' }}
+                    onClick={(data) => navigate(data.name === 'Employed' ? '/beneficiary?emp=yes' : data.name === 'Unemployed' ? '/beneficiary?emp=no' : '#')}>
                     <Cell fill="#34a853" />
                     <Cell fill="#ea4335" />
                     <Cell fill="#f1f3f4" />
@@ -108,7 +117,8 @@ export default function Livelihood() {
                   <XAxis dataKey="name" tick={{ fontSize:11, fill:'#5f6368' }} />
                   <YAxis tick={{ fontSize:11, fill:'#5f6368' }} />
                   <Tooltip content={<CustomTooltip />} cursor={false} />
-                  <Bar dataKey="value" radius={[4,4,0,0]}>
+                  <Bar dataKey="value" radius={[4,4,0,0]} style={{ cursor:'pointer' }}
+                    onClick={(data) => navigate(`/beneficiary?emp=yes&etype=${encodeURIComponent(getEtypeFilter(data.name))}`)}>
                     {empTypeData.map((_, i) => (
                       <Cell key={i} fill={COLORS[i % COLORS.length]} />
                     ))}
@@ -129,7 +139,8 @@ export default function Livelihood() {
                 <XAxis type="number" tick={{ fontSize:11, fill:'#5f6368' }} />
                 <YAxis type="category" dataKey="name" tick={{ fontSize:12, fill:'#3c4043' }} width={120} />
                 <Tooltip content={<CustomTooltip />} cursor={false} />
-                <Bar dataKey="value" radius={[0,4,4,0]}>
+                <Bar dataKey="value" radius={[0,4,4,0]} style={{ cursor:'pointer' }}
+                  onClick={(data) => navigate(`/beneficiary?emp=yes&etype=${encodeURIComponent(getEtypeFilter(data.name))}`)}>
                   {empTypeHBar.map((_, i) => (
                     <Cell key={i} fill={COLORS[i % COLORS.length]} />
                   ))}

@@ -97,7 +97,8 @@ export default function Education() {
                 angle={-35} textAnchor="end" height={70} />
               <YAxis tick={{ fontSize:11, fill:'#5f6368' }} />
               <Tooltip content={<CustomTooltip />} cursor={false} />
-              <Bar dataKey="value" radius={[4,4,0,0]}>
+              <Bar dataKey="value" radius={[4,4,0,0]} style={{ cursor:'pointer' }}
+                onClick={(data) => navigate(`/beneficiary?edu=${encodeURIComponent(data.name)}`)}>
                 {eduData.map((d, i) => (
                   <Cell key={i} fill={COLORS[i % COLORS.length]}
                     opacity={highlight && d.name !== highlight ? 0.35 : 1} />
