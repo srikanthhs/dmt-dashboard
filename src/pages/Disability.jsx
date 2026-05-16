@@ -18,6 +18,15 @@ const disabilityData = Object.entries(stats.disability_type)
 
 const natureData = Object.entries(stats.nature).map(([name, value]) => ({ name, value }))
 
+// Maps stats.js labels → actual dis field search strings in beneficiaries.json
+const disFilterMap = {
+  'Intellectual Disability': 'MR',
+  'Hearing Impairment': 'HH',
+  'Speech & Language': 'Speech and Language',
+  'Haemophilia': 'Hemophilia',
+}
+const getDisFilter = (name) => disFilterMap[name] || name
+
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   return (
@@ -94,7 +103,7 @@ export default function Disability() {
                 <YAxis tick={{ fontSize:11, fill:'#5f6368' }} />
                 <Tooltip content={<CustomTooltip />} cursor={false} />
                 <Bar dataKey="value" radius={[4,4,0,0]} style={{ cursor:'pointer' }}
-                  onClick={(data) => navigate(`/beneficiary?dis=${encodeURIComponent(data.name.split('(')[0].trim())}`)}>
+                  onClick={(data) => navigate(`/beneficiary?dis=${encodeURIComponent(getDisFilter(data.name))}`)}>
                   {disabilityData.map((d, i) => (
                     <Cell key={i} fill={COLORS[i % COLORS.length]}
                       opacity={highlight && d.name !== highlight && highlight !== 'Permanent' ? 0.35 : 1} />
@@ -165,7 +174,7 @@ export default function Disability() {
                   {sortedData.map((d, i) => {
                     const origIdx = disabilityData.findIndex(x => x.name === d.name)
                     const isHighlighted = highlight === d.name
-                    const disKey = d.name.split('(')[0].trim()
+                    const disKey = getDisFilter(d.name)
                     return (
                       <tr key={i}
                         onClick={() => navigate(`/beneficiary?dis=${encodeURIComponent(disKey)}`)}
