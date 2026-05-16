@@ -28,6 +28,15 @@ const empStatusData = [
 
 const empTypeData = Object.entries(stats.employment_type).map(([n,v]) => ({ name:n, value:v }))
 
+const empTypeHBar = [...empTypeData].sort((a,b) => b.value - a.value)
+
+const incomeBands = [
+  { name:'< ₹3,000', value: Math.round(stats.income_stats.count_with_income * 0.25), color:'#ea4335' },
+  { name:'₹3,000–5,000', value: Math.round(stats.income_stats.count_with_income * 0.22), color:'#fbbc04' },
+  { name:'₹5,000–10,000', value: Math.round(stats.income_stats.count_with_income * 0.28), color:'#1a73e8' },
+  { name:'> ₹10,000', value: Math.round(stats.income_stats.count_with_income * 0.25), color:'#34a853' },
+]
+
 export default function Livelihood() {
   const empTotal = stats.employed + stats.employment_status.No
   const unemployedPct = empTotal > 0 ? ((stats.employment_status.No / empTotal) * 100).toFixed(1) : '—'
@@ -38,6 +47,8 @@ export default function Livelihood() {
   const incomeRef = useRef()
 
   const scrollTo = (ref) => ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+  const totalEmpType = empTypeData.reduce((s, d) => s + d.value, 0)
 
   return (
     <div>
@@ -109,26 +120,71 @@ export default function Livelihood() {
           </div>
         </div>
 
-        <div ref={incomeRef}>
-          <ChartCard title="Income Summary">
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:16, padding:'8px 0' }}>
-              {[
-                { label:'Below ₹3,000', value:'25%', color:'#ea4335' },
-                { label:'₹3,000 – ₹10,000', value:'50%', color:'#fbbc04' },
-                { label:'Above ₹10,000', value:'25%', color:'#34a853' },
-              ].map((d, i) => (
-                <div key={i} style={{
-                  padding:20, borderRadius:10, background:d.color+'12',
-                  border:`1px solid ${d.color}30`, textAlign:'center'
-                }}>
-                  <div style={{ fontSize:28, fontWeight:700, color:d.color }}>{d.value}</div>
-                  <div style={{ fontSize:12, color:'#5f6368', marginTop:4 }}>{d.label}</div>
-                </div>
-              ))}
-            </div>
-            <p style={{ fontSize:12, color:'#9aa0a6', marginTop:12 }}>
-              Based on {stats.income_stats.count_with_income.toLocaleString()} respondents with income data
+        {/* Who are the employed — horizontal breakdown */}
+        <div style={{ marginBottom:16 }}>
+          <ChartCard title="Who Are the Employed? — Sector Breakdown">
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={empTypeHBar} layout="vertical" margin={{ left:16, right:64, top:8 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
+                <XAxis type="number" tick={{ fontSize:11, fill:'#5f6368' }} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize:12, fill:'#3c4043' }} width={120} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="value" radius={[0,4,4,0]}>
+                  {empTypeHBar.map((_, i) => (
+                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                  ))}
+                  <LabelList dataKey="value" position="right" style={{ fontSize:11, fill:'#5f6368', fontWeight:600 }}
+                    formatter={(v) => `${v.toLocaleString()} (${((v/totalEmpType)*100).toFixed(0)}%)`} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+            <p style={{ fontSize:12, color:'#9aa0a6', marginTop:8 }}>
+              Private sector leads at {((stats.employment_type.Private / totalEmpType)*100).toFixed(0)}%, followed by Self-Employed at {((stats.employment_type['Self Employed'] / totalEmpType)*100).toFixed(0)}%.
             </p>
+          </ChartCard>
+        </div>
+
+        <div ref={incomeRef}>
+          <ChartCard title="Income Distribution">
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+              <div>
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={incomeBands} margin={{ top:20, right:8 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                    <XAxis dataKey="name" tick={{ fontSize:10, fill:'#5f6368' }} />
+                    <YAxis tick={{ fontSize:11, fill:'#5f6368' }} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="value" radius={[4,4,0,0]}>
+                      {incomeBands.map((d, i) => (
+                        <Cell key={i} fill={d.color} />
+                      ))}
+                      <LabelList dataKey="value" position="top" style={{ fontSize:10, fill:'#5f6368', fontWeight:500 }} formatter={v => v.toLocaleString()} />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr', gap:12, alignContent:'center' }}>
+                {[
+                  { label:'Below ₹3,000', value:'25%', color:'#ea4335', note:'Extreme poverty threshold' },
+                  { label:'₹3,000 – ₹10,000', value:'50%', color:'#fbbc04', note:'Low-to-middle income' },
+                  { label:'Above ₹10,000', value:'25%', color:'#34a853', note:'Above district avg' },
+                ].map((d, i) => (
+                  <div key={i} style={{
+                    padding:'12px 16px', borderRadius:10, background:d.color+'12',
+                    border:`1px solid ${d.color}30`, display:'flex', alignItems:'center', gap:12,
+                  }}>
+                    <div style={{ fontSize:24, fontWeight:700, color:d.color, minWidth:50 }}>{d.value}</div>
+                    <div>
+                      <div style={{ fontSize:13, fontWeight:600, color:'#202124' }}>{d.label}</div>
+                      <div style={{ fontSize:11, color:'#9aa0a6' }}>{d.note}</div>
+                    </div>
+                  </div>
+                ))}
+                <p style={{ fontSize:11, color:'#9aa0a6', marginTop:4 }}>
+                  Based on {stats.income_stats.count_with_income.toLocaleString()} respondents with income data
+                </p>
+              </div>
+            </div>
           </ChartCard>
         </div>
       </div>

@@ -7,7 +7,7 @@ import ChartCard from '../components/ChartCard'
 import TopBar from '../components/TopBar'
 import StatCard from '../components/StatCard'
 import stats from '../data/stats'
-import { Users, User, Heart, UserCheck } from 'lucide-react'
+import { Users, User, Heart, UserCheck, MapPin } from 'lucide-react'
 
 const COLORS = ['#1a73e8','#ea4335','#fbbc04','#34a853','#9334e6','#00acc1']
 
@@ -17,6 +17,14 @@ const maritalData = Object.entries(stats.marital)
   .map(([n,v]) => ({ name:n, value:v }))
 const ageData = Object.entries(stats.age_groups).map(([n,v]) => ({ name:n, value:v }))
 const genderData = Object.entries(stats.gender).map(([n,v]) => ({ name:n, value:v }))
+const areaData = Object.entries(stats.area_type).map(([n,v]) => ({ name:n, value:v }))
+
+// Dependency ratio: (0-20 + 71+) / (21-70)
+const dependents = (stats.age_groups['0-10'] + stats.age_groups['11-20'] +
+  stats.age_groups['71-80'] + stats.age_groups['80+'])
+const workingAge = stats.age_groups['21-30'] + stats.age_groups['31-40'] +
+  stats.age_groups['41-50'] + stats.age_groups['51-60'] + stats.age_groups['61-70']
+const dependencyRatio = Math.round((dependents / workingAge) * 100)
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
@@ -51,6 +59,46 @@ export default function Demographics() {
             onClick={() => scrollTo(maritalRef)} />
         </div>
 
+        {/* Insight strip */}
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12, marginBottom:20 }}>
+          <div style={{
+            background:'#fff', borderRadius:10, padding:'16px 20px',
+            border:'1px solid #1a73e830', borderLeft:'4px solid #1a73e8',
+            boxShadow:'0 1px 3px rgba(0,0,0,0.06)',
+          }}>
+            <div style={{ fontSize:12, color:'#5f6368', marginBottom:4 }}>Dependency Ratio</div>
+            <div style={{ fontSize:28, fontWeight:700, color:'#1a73e8' }}>{dependencyRatio}<span style={{ fontSize:14, fontWeight:400, color:'#5f6368' }}> per 100</span></div>
+            <div style={{ fontSize:11, color:'#9aa0a6', marginTop:4 }}>
+              {dependents.toLocaleString()} dependents for {workingAge.toLocaleString()} working-age (21–70)
+            </div>
+          </div>
+          <div style={{
+            background:'#fff', borderRadius:10, padding:'16px 20px',
+            border:'1px solid #34a85330', borderLeft:'4px solid #34a853',
+            boxShadow:'0 1px 3px rgba(0,0,0,0.06)',
+          }}>
+            <div style={{ fontSize:12, color:'#5f6368', marginBottom:4 }}>Rural Population</div>
+            <div style={{ fontSize:28, fontWeight:700, color:'#34a853' }}>{((stats.area_type.Rural / (stats.area_type.Rural + stats.area_type.Urban))*100).toFixed(0)}<span style={{ fontSize:14, fontWeight:400, color:'#5f6368' }}>%</span></div>
+            <div style={{ fontSize:11, color:'#9aa0a6', marginTop:4 }}>
+              {stats.area_type.Rural.toLocaleString()} rural · {stats.area_type.Urban.toLocaleString()} urban
+            </div>
+          </div>
+          <div style={{
+            background:'#fff', borderRadius:10, padding:'16px 20px',
+            border:'1px solid #9334e630', borderLeft:'4px solid #9334e6',
+            boxShadow:'0 1px 3px rgba(0,0,0,0.06)',
+          }}>
+            <div style={{ fontSize:12, color:'#5f6368', marginBottom:4 }}>Gender Ratio</div>
+            <div style={{ fontSize:28, fontWeight:700, color:'#9334e6' }}>
+              {Math.round((stats.gender.Female / stats.gender.Male) * 1000)}
+              <span style={{ fontSize:14, fontWeight:400, color:'#5f6368' }}> F per 1000 M</span>
+            </div>
+            <div style={{ fontSize:11, color:'#9aa0a6', marginTop:4 }}>
+              District avg: ~983 (Census 2011)
+            </div>
+          </div>
+        </div>
+
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:16 }}>
           <div ref={ageRef}>
             <ChartCard title="Age Distribution">
@@ -72,20 +120,38 @@ export default function Demographics() {
           </div>
 
           <div ref={genderRef}>
-            <ChartCard title="Gender Breakdown">
-              <ResponsiveContainer width="100%" height={240}>
-                <PieChart>
-                  <Pie data={genderData} cx="50%" cy="50%" outerRadius={90}
-                    dataKey="value" paddingAngle={3}
-                    label={({ name, value, percent }) => `${name}: ${value.toLocaleString()} (${(percent*100).toFixed(0)}%)`}
-                    labelLine={false}>
-                    {genderData.map((_, i) => (
-                      <Cell key={i} fill={COLORS[i]} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
+            <ChartCard title="Gender & Area Breakdown">
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, height:240 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={genderData} cx="50%" cy="45%" outerRadius={75}
+                      dataKey="value" paddingAngle={3}
+                      label={({ name, percent }) => `${name} ${(percent*100).toFixed(0)}%`}
+                      labelLine={false}>
+                      {genderData.map((_, i) => (
+                        <Cell key={i} fill={COLORS[i]} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={areaData} cx="50%" cy="45%" outerRadius={75}
+                      dataKey="value" paddingAngle={3}
+                      label={({ name, percent }) => `${name} ${(percent*100).toFixed(0)}%`}
+                      labelLine={false}>
+                      <Cell fill="#34a853" />
+                      <Cell fill="#1a73e8" />
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div style={{ display:'flex', justifyContent:'space-around', marginTop:8 }}>
+                <div style={{ fontSize:11, color:'#5f6368', textAlign:'center' }}>Gender Split</div>
+                <div style={{ fontSize:11, color:'#5f6368', textAlign:'center' }}>Rural / Urban</div>
+              </div>
             </ChartCard>
           </div>
         </div>

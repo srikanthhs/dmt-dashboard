@@ -35,10 +35,56 @@ const stackedData = BLOCKS.map(block => {
 
 const disabilityKeys = ['Locomotor Disability', 'Intellectual Disability', 'Hearing Impairment', 'Mental Illness', 'Blindness']
 
+const SortIcon = ({ col, sortKey, sortDir }) => {
+  if (sortKey !== col) return <span style={{ color:'#d0d0d0', fontSize:10 }}> ⇅</span>
+  return <span style={{ color:'#1a73e8', fontSize:10 }}>{sortDir === 'asc' ? ' ↑' : ' ↓'}</span>
+}
+
 export default function Blocks() {
   const [selected, setSelected] = useState('Mayiladuthurai')
+  const [sortKey, setSortKey] = useState('total')
+  const [sortDir, setSortDir] = useState('desc')
+
   const blockData = stats.block_disability[selected] || {}
   const blockTotal = stats.blocks[selected] || 0
+
+  const handleSort = (key) => {
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortKey(key); setSortDir('desc') }
+  }
+
+  const tableData = BLOCKS.map((block, i) => {
+    const total = stats.blocks[block]
+    const disab = stats.block_disability[block] || {}
+    const topDisab = Object.entries(disab).sort((a,b) => b[1]-a[1])[0]
+    return {
+      block,
+      total,
+      pct: ((total / stats.total) * 100).toFixed(1),
+      topDisab: topDisab ? topDisab[0] : '—',
+      topDisabCount: topDisab ? topDisab[1] : 0,
+      color: COLORS[i],
+    }
+  })
+
+  const sortedTable = [...tableData].sort((a, b) => {
+    const av = sortKey === 'block' ? a.block : sortKey === 'pct' ? parseFloat(a.pct) : sortKey === 'topDisab' ? a.topDisab : a[sortKey]
+    const bv = sortKey === 'block' ? b.block : sortKey === 'pct' ? parseFloat(b.pct) : sortKey === 'topDisab' ? b.topDisab : b[sortKey]
+    if (typeof av === 'string') return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av)
+    return sortDir === 'asc' ? av - bv : bv - av
+  })
+
+  const thStyle = (key) => ({
+    textAlign: key === 'block' || key === 'topDisab' ? 'left' : 'right',
+    padding: '10px 12px',
+    color: sortKey === key ? '#1a73e8' : '#5f6368',
+    fontWeight: 500,
+    cursor: 'pointer',
+    userSelect: 'none',
+    background: '#f8f9fa',
+    borderBottom: '2px solid #e0e0e0',
+    whiteSpace: 'nowrap',
+  })
 
   return (
     <div>
@@ -99,8 +145,8 @@ export default function Blocks() {
           ))}
         </div>
 
-        {/* All blocks comparison */}
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+        {/* Charts */}
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:16 }}>
           <ChartCard title="Total Persons by Block">
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={blockOverview} margin={{ top:20, right:8 }}>
@@ -145,6 +191,48 @@ export default function Blocks() {
             </ResponsiveContainer>
           </ChartCard>
         </div>
+
+        {/* Block Comparison Table */}
+        <ChartCard title="Block Comparison Table">
+          <div style={{ overflowX:'auto' }}>
+            <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13 }}>
+              <thead>
+                <tr>
+                  <th style={thStyle('block')} onClick={() => handleSort('block')}>Block <SortIcon col="block" sortKey={sortKey} sortDir={sortDir} /></th>
+                  <th style={thStyle('total')} onClick={() => handleSort('total')}>Total <SortIcon col="total" sortKey={sortKey} sortDir={sortDir} /></th>
+                  <th style={thStyle('pct')} onClick={() => handleSort('pct')}>% of District <SortIcon col="pct" sortKey={sortKey} sortDir={sortDir} /></th>
+                  <th style={thStyle('topDisab')} onClick={() => handleSort('topDisab')}>Top Disability <SortIcon col="topDisab" sortKey={sortKey} sortDir={sortDir} /></th>
+                  <th style={thStyle('topDisabCount')} onClick={() => handleSort('topDisabCount')}>Count <SortIcon col="topDisabCount" sortKey={sortKey} sortDir={sortDir} /></th>
+                  <th style={{ ...thStyle('bar'), textAlign:'left' }}>Share</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedTable.map((row, i) => (
+                  <tr key={i}
+                    onClick={() => setSelected(row.block)}
+                    style={{ borderBottom:'1px solid #f0f0f0', cursor:'pointer', background: selected === row.block ? '#e8f0fe' : 'transparent' }}
+                    onMouseEnter={e => { if (selected !== row.block) e.currentTarget.style.background = '#f8f9fa' }}
+                    onMouseLeave={e => { if (selected !== row.block) e.currentTarget.style.background = '' }}>
+                    <td style={{ padding:'9px 12px', fontWeight:600 }}>
+                      <span style={{ display:'inline-block', width:10, height:10, borderRadius:'50%', background:row.color, marginRight:8 }} />
+                      {row.block}
+                    </td>
+                    <td style={{ padding:'9px 12px', textAlign:'right', fontWeight:600 }}>{row.total.toLocaleString()}</td>
+                    <td style={{ padding:'9px 12px', textAlign:'right', color:'#5f6368' }}>{row.pct}%</td>
+                    <td style={{ padding:'9px 12px', color:'#3c4043' }}>{row.topDisab}</td>
+                    <td style={{ padding:'9px 12px', textAlign:'right', color:'#1a73e8', fontWeight:600 }}>{row.topDisabCount.toLocaleString()}</td>
+                    <td style={{ padding:'9px 12px', width:160 }}>
+                      <div style={{ height:8, background:'#f1f3f4', borderRadius:4, overflow:'hidden' }}>
+                        <div style={{ height:'100%', width:`${row.pct}%`, background:row.color, borderRadius:4 }} />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p style={{ fontSize:11, color:'#9aa0a6', marginTop:10 }}>Click any row to view that block's detailed breakdown above.</p>
+        </ChartCard>
       </div>
     </div>
   )
