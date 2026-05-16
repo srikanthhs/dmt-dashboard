@@ -1,16 +1,16 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import {
   Search, X, User, MapPin, FileText, Heart, Home,
   Briefcase, GraduationCap, ChevronRight, AlertCircle,
-  Clock, Bike, Gift, CheckCircle, XCircle
+  Clock, Bike, Gift, CheckCircle, XCircle, Filter
 } from 'lucide-react'
 import TopBar from '../components/TopBar'
 
 let cachedSurvey = null
 let cachedScooty = null
-// Cross-reference indices built once after load
-let scootyIdx = null  // { byUdid, byNidc, byMobile, byAadhar }
-let surveyIdx = null  // { byUdid, byNidc, byMobile }
+let scootyIdx = null
+let surveyIdx = null
 
 const FIELD_MAP = {
   n: 'Name', dob: 'Date of Birth', age: 'Age', g: 'Gender', mob: 'Mobile',
@@ -23,7 +23,6 @@ const FIELD_MAP = {
   water: 'Water Source', toilet: 'Toilet Facility', fam: 'Family Members',
   area: 'Area Type', vil: 'Village', tal: 'Taluk', pin: 'Pincode',
   door: 'Door No', str: 'Street', stat: 'Status', dap: 'DAP Name', pcare: 'Primary Care',
-  // scooty fields
   aadhar: 'Aadhaar No', veh: 'Vehicle No', rto: 'RTO', fy: 'Financial Year',
   leg: 'Leg Type', stype: 'Scooter Type', fund: 'Fund Type', mla: 'MLA Constituency',
   addr: 'Address',
@@ -71,16 +70,53 @@ function crossReference(person, sourceIdx) {
   return Array.from(matches)
 }
 
+function applyFilter(records, params) {
+  return records.filter(r => {
+    if (params.blk && r.blk !== params.blk) return false
+    if (params.g && r.g !== params.g) return false
+    if (params.udid === 'yes' && (!r.udid || String(r.udid) === 'nan')) return false
+    if (params.udid === 'no' && r.udid && String(r.udid) !== 'nan') return false
+    if (params.nidc === 'yes' && (!r.nidc || String(r.nidc) === 'nan')) return false
+    if (params.nidc === 'no' && r.nidc && String(r.nidc) !== 'nan') return false
+    if (params.aad === 'yes' && r.aad !== 'Aadhaar Available') return false
+    if (params.aad === 'no' && r.aad === 'Aadhaar Available') return false
+    if (params.emp === 'yes' && r.emp !== 'Yes') return false
+    if (params.emp === 'no' && r.emp !== 'No') return false
+    if (params.nat && r.nat !== params.nat) return false
+    if (params.dis && !r.dis?.toLowerCase().includes(params.dis.toLowerCase())) return false
+    if (params.caste && r.caste !== params.caste) return false
+    if (params.hstat && r.hstat !== params.hstat) return false
+    if (params.elec && r.elec !== params.elec) return false
+    if (params.water && r.water !== params.water) return false
+    if (params.toilet && r.toilet !== params.toilet) return false
+    return true
+  })
+}
+
+function getFilterLabel(params) {
+  const labels = {
+    blk:    v => `Block: ${v}`,
+    g:      v => `Gender: ${v}`,
+    udid:   v => v === 'yes' ? 'With UDID Card' : 'Without UDID Card',
+    nidc:   v => v === 'yes' ? 'With NIDC Card' : 'Without NIDC Card',
+    aad:    v => v === 'yes' ? 'Aadhaar Linked' : 'Aadhaar Not Linked',
+    emp:    v => v === 'yes' ? 'Currently Employed' : 'Currently Unemployed',
+    nat:    v => `${v} Disability`,
+    dis:    v => `Disability: ${v}`,
+    caste:  v => `Caste: ${v}`,
+    hstat:  v => `House Ownership: ${v}`,
+    elec:   v => `Electricity: ${v}`,
+    water:  v => `Water Source: ${v}`,
+    toilet: v => `Toilet: ${v}`,
+  }
+  return Object.entries(params).map(([k, v]) => labels[k]?.(v) || `${k}: ${v}`).join(' · ')
+}
+
 function getBenefits(person) {
   const benefits = []
-
-  // 1. Scooty Scheme
   if (person.src === 'scooty') {
-    // They ARE a scooty beneficiary — find their survey record
     benefits.push({
-      scheme: 'Scooty Scheme',
-      icon: Bike, color: '#1a73e8',
-      status: 'received',
+      scheme: 'Scooty Scheme', icon: Bike, color: '#1a73e8', status: 'received',
       details: [
         { label: 'Vehicle No', value: person.veh || '—' },
         { label: 'Financial Year', value: person.fy || '—' },
@@ -91,14 +127,11 @@ function getBenefits(person) {
         { label: 'MLA Constituency', value: person.mla || '—' },
       ].filter(d => d.value && d.value !== '—'),
     })
-    // Also find their survey registration
     const surveyMatches = crossReference(person, surveyIdx)
     if (surveyMatches.length > 0) {
       const s = surveyMatches[0]
       benefits.push({
-        scheme: 'DAP Survey Registration',
-        icon: FileText, color: '#34a853',
-        status: 'registered',
+        scheme: 'DAP Survey Registration', icon: FileText, color: '#34a853', status: 'registered',
         details: [
           { label: 'Block', value: s.blk || '—' },
           { label: 'Village', value: s.vil || '—' },
@@ -109,14 +142,11 @@ function getBenefits(person) {
       })
     }
   } else {
-    // Survey person — check if they got a scooty
     const scootyMatches = crossReference(person, scootyIdx)
     if (scootyMatches.length > 0) {
       scootyMatches.forEach(sm => {
         benefits.push({
-          scheme: 'Scooty Scheme',
-          icon: Bike, color: '#1a73e8',
-          status: 'received',
+          scheme: 'Scooty Scheme', icon: Bike, color: '#1a73e8', status: 'received',
           details: [
             { label: 'Vehicle No', value: sm.veh || '—' },
             { label: 'Financial Year', value: sm.fy || '—' },
@@ -128,11 +158,8 @@ function getBenefits(person) {
         })
       })
     }
-    // Survey registration itself
     benefits.push({
-      scheme: 'DAP Survey Registration',
-      icon: FileText, color: '#34a853',
-      status: 'registered',
+      scheme: 'DAP Survey Registration', icon: FileText, color: '#34a853', status: 'registered',
       details: [
         { label: 'Block', value: person.blk || '—' },
         { label: 'Member Status', value: person.stat || '—' },
@@ -142,7 +169,6 @@ function getBenefits(person) {
       ].filter(d => d.value && d.value !== '—'),
     })
   }
-
   return benefits
 }
 
@@ -172,8 +198,7 @@ function BenefitsPanel({ benefits }) {
           return (
             <div key={i} style={{
               background: '#fff', borderRadius: 10, padding: '12px 14px',
-              border: `1px solid ${b.color}30`,
-              borderLeft: `4px solid ${b.color}`,
+              border: `1px solid ${b.color}30`, borderLeft: `4px solid ${b.color}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                 <Icon size={16} color={b.color} />
@@ -205,7 +230,6 @@ function BenefitsPanel({ benefits }) {
 function ProfileCard({ person, onClose }) {
   const benefits = getBenefits(person)
   const hasScooty = benefits.some(b => b.scheme === 'Scooty Scheme')
-
   return (
     <div style={{
       position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
@@ -216,7 +240,6 @@ function ProfileCard({ person, onClose }) {
         background: '#fff', boxShadow: '-4px 0 24px rgba(0,0,0,0.15)',
         display: 'flex', flexDirection: 'column',
       }}>
-        {/* Header */}
         <div style={{
           background: 'linear-gradient(135deg,#1a73e8,#4285f4)',
           padding: '24px 24px 20px', color: '#fff', position: 'sticky', top: 0, zIndex: 2,
@@ -253,13 +276,9 @@ function ProfileCard({ person, onClose }) {
             ))}
           </div>
         </div>
-
-        {/* Benefits panel — immediately visible */}
         <div style={{ paddingTop: 16 }}>
           <BenefitsPanel benefits={benefits} />
         </div>
-
-        {/* Disability highlight */}
         {person.dis && (
           <div style={{ margin: '12px 16px 0', padding: '14px 16px', background: '#fce8e6', borderRadius: 10, border: '1px solid #f5c6c2' }}>
             <div style={{ fontSize: 11, color: '#c62828', fontWeight: 600, marginBottom: 4 }}>DISABILITY</div>
@@ -269,8 +288,6 @@ function ProfileCard({ person, onClose }) {
             </div>
           </div>
         )}
-
-        {/* Detail sections */}
         <div style={{ padding: '12px 16px 32px', flex: 1 }}>
           {SECTIONS.map(({ label, icon: Icon, color, fields }) => {
             const entries = fields.map(f => [FIELD_MAP[f], person[f]]).filter(([, v]) => v)
@@ -298,14 +315,80 @@ function ProfileCard({ person, onClose }) {
   )
 }
 
+function ResultRow({ r, onSelect }) {
+  const scootyMatch = scootyIdx ? crossReference(r, scootyIdx).length > 0 : r.src === 'scooty'
+  const isScooty = r.src === 'scooty'
+  return (
+    <div onClick={() => onSelect(r)} style={{
+      background: '#fff', borderRadius: 12, padding: '14px 16px',
+      border: '1px solid #f0f0f0', cursor: 'pointer',
+      display: 'flex', alignItems: 'center', gap: 16,
+      boxShadow: '0 1px 3px rgba(0,0,0,0.06)', transition: 'box-shadow 0.15s, border-color 0.15s',
+    }}
+      onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 3px 12px rgba(0,0,0,0.12)'; e.currentTarget.style.borderColor = '#1a73e8' }}
+      onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)'; e.currentTarget.style.borderColor = '#f0f0f0' }}
+    >
+      <div style={{
+        width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
+        background: isScooty ? '#1a73e8' : '#34a853',
+        color: '#fff', fontWeight: 700, fontSize: 16,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        {(r.n || '?')[0].toUpperCase()}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontWeight: 600, fontSize: 15, color: '#202124', marginBottom: 3 }}>{r.n || '—'}</div>
+        <div style={{ fontSize: 12, color: '#5f6368', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          {r.g && <span>{r.g}</span>}
+          {r.age && <span>Age {r.age}</span>}
+          {r.blk && <span>📍 {r.blk}</span>}
+          {r.mob && <span>📞 {r.mob}</span>}
+          {r.dis && <span style={{ color: '#ea4335' }}>{r.dis?.split('(')[0].trim()}</span>}
+        </div>
+        <div style={{ fontSize: 11, marginTop: 6, display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+          <span style={{ fontSize: 10, color: '#9aa0a6', fontWeight: 600, textTransform: 'uppercase' }}>Benefits:</span>
+          <span style={{ background: '#e8f0fe', color: '#1967d2', padding: '2px 8px', borderRadius: 10, fontWeight: 600, fontSize: 11 }}>✓ DAP Survey</span>
+          {(isScooty || scootyMatch) && (
+            <span style={{ background: '#f3e8ff', color: '#7c3aed', padding: '2px 8px', borderRadius: 10, fontWeight: 600, fontSize: 11 }}>
+              🛵 Scooty {r.veh ? `(${r.veh})` : ''}
+            </span>
+          )}
+          {(r.aad === 'Aadhaar Available' || r.aadhar) && <span style={{ background: '#e6f4ea', color: '#137333', padding: '2px 8px', borderRadius: 10, fontWeight: 500 }}>Aadhaar ✓</span>}
+          {r.udid && <span style={{ background: '#e6f4ea', color: '#137333', padding: '2px 8px', borderRadius: 10, fontWeight: 500 }}>UDID ✓</span>}
+          {r.nidc && <span style={{ background: '#e8f0fe', color: '#1967d2', padding: '2px 8px', borderRadius: 10, fontWeight: 500 }}>NIDC ✓</span>}
+          {r.emp === 'Yes' && <span style={{ background: '#e6f4ea', color: '#137333', padding: '2px 8px', borderRadius: 10, fontWeight: 500 }}>Employed ✓</span>}
+        </div>
+      </div>
+      <ChevronRight size={18} color="#9aa0a6" style={{ flexShrink: 0 }} />
+    </div>
+  )
+}
+
+const PAGE_SIZE = 50
+
 export default function Beneficiary() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState([])
+  const [searchResults, setSearchResults] = useState([])
   const [selected, setSelected] = useState(null)
   const [dataLoaded, setDataLoaded] = useState(false)
   const [dataError, setDataError] = useState(false)
+  const [filteredAll, setFilteredAll] = useState(null)  // null = no active filter
+  const [page, setPage] = useState(1)
   const inputRef = useRef()
   const dataRef = useRef(null)
+
+  // Parse URL filter params (exclude 'q')
+  const urlFilter = useMemo(() => {
+    const f = {}
+    for (const [k, v] of searchParams.entries()) {
+      if (k !== 'q') f[k] = v
+    }
+    return Object.keys(f).length ? f : null
+  }, [searchParams])
+
+  const filterLabel = urlFilter ? getFilterLabel(urlFilter) : null
 
   useEffect(() => {
     const p1 = cachedSurvey
@@ -317,7 +400,6 @@ export default function Beneficiary() {
     Promise.all([p1, p2])
       .then(([survey, scooty]) => {
         dataRef.current = [...survey, ...scooty]
-        // Build cross-reference indices
         scootyIdx = buildIndex(scooty, ['udid', 'nidc', 'mob', 'aadhar'])
         surveyIdx = buildIndex(survey, ['udid', 'nidc', 'mob'])
         setDataLoaded(true)
@@ -325,11 +407,26 @@ export default function Beneficiary() {
       .catch(() => setDataError(true))
   }, [])
 
+  // Apply URL filter when data loads or params change
+  useEffect(() => {
+    if (!dataLoaded || !dataRef.current) return
+    if (urlFilter) {
+      const results = applyFilter(dataRef.current, urlFilter)
+      setFilteredAll(results)
+      setPage(1)
+      setQuery('')
+      setSearchResults([])
+    } else {
+      setFilteredAll(null)
+    }
+  }, [urlFilter, dataLoaded])
+
   const doSearch = useCallback((q) => {
-    if (!q || q.length < 2 || !dataRef.current) { setResults([]); return }
+    if (!q || q.length < 2 || !dataRef.current) { setSearchResults([]); return }
     const lower = q.toLowerCase().trim()
+    const pool = filteredAll ?? dataRef.current
     const matches = []
-    for (const r of dataRef.current) {
+    for (const r of pool) {
       if (
         (r.n && r.n.toLowerCase().includes(lower)) ||
         (r.mob && r.mob.includes(q)) ||
@@ -343,46 +440,84 @@ export default function Beneficiary() {
         (r.dap && r.dap.toLowerCase().includes(lower))
       ) {
         matches.push(r)
-        if (matches.length >= 20) break
+        if (matches.length >= 50) break
       }
     }
-    setResults(matches)
-  }, [])
+    setSearchResults(matches)
+  }, [filteredAll])
 
   useEffect(() => {
     const t = setTimeout(() => doSearch(query), 250)
     return () => clearTimeout(t)
   }, [query, doSearch, dataLoaded])
 
-  const statusColor = status => {
-    if (!status) return '#9aa0a6'
-    if (status.includes('Certificate')) return '#ea4335'
-    if (status.includes('Enrolled')) return '#fbbc04'
-    return '#34a853'
+  const clearFilter = () => {
+    setSearchParams({})
+    setFilteredAll(null)
+    setQuery('')
+    setSearchResults([])
   }
+
+  // Determine what list to show
+  const inSearchMode = query.length >= 2
+  const displayList = inSearchMode
+    ? searchResults
+    : filteredAll ? filteredAll.slice(0, page * PAGE_SIZE) : []
+
+  const totalFiltered = filteredAll?.length ?? 0
+  const hasMore = !inSearchMode && filteredAll && page * PAGE_SIZE < filteredAll.length
 
   return (
     <div>
       <TopBar title="Individual Search" subtitle="Search 16,047 records — enter UDID, Aadhaar, Name, Mobile, NIDC or Vehicle No to see all benefits" />
       <div style={{ padding: 24 }}>
 
+        {/* Active filter banner */}
+        {filterLabel && (
+          <div style={{
+            background: '#e8f0fe', border: '1px solid #1a73e830',
+            borderLeft: '4px solid #1a73e8',
+            borderRadius: 10, padding: '12px 16px', marginBottom: 16,
+            display: 'flex', alignItems: 'center', gap: 12,
+          }}>
+            <Filter size={16} color="#1a73e8" />
+            <div style={{ flex: 1 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#1a73e8' }}>{filterLabel}</span>
+              {dataLoaded && (
+                <span style={{ fontSize: 12, color: '#5f6368', marginLeft: 12 }}>
+                  {totalFiltered.toLocaleString()} matching record{totalFiltered !== 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
+            <button onClick={clearFilter} style={{
+              background: 'none', border: '1px solid #1a73e830', borderRadius: 8,
+              padding: '4px 12px', fontSize: 12, color: '#1a73e8', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 4,
+            }}>
+              <X size={12} /> Clear filter
+            </button>
+          </div>
+        )}
+
         {/* Search box */}
         <div style={{
-          background: '#fff', borderRadius: 16, padding: 32,
+          background: '#fff', borderRadius: 16, padding: 24,
           boxShadow: '0 2px 8px rgba(0,0,0,0.08)', border: '1px solid #f0f0f0',
           maxWidth: 700, margin: '0 auto 24px',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
             <div style={{ width: 48, height: 48, borderRadius: 12, background: '#e8f0fe', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Search size={22} color="#1a73e8" />
             </div>
             <div>
               <div style={{ fontFamily: "'Google Sans',sans-serif", fontSize: 18, fontWeight: 600, color: '#202124' }}>
-                Beneficiary Lookup
+                {filterLabel ? `Search within: ${filterLabel}` : 'Beneficiary Lookup'}
               </div>
               <div style={{ fontSize: 12, color: '#5f6368' }}>
                 {dataLoaded
-                  ? 'Search across 16,047 records (15,429 survey + 618 scooty) — shows all benefits received'
+                  ? filterLabel
+                    ? `${totalFiltered.toLocaleString()} records in this filter — search by name, ID, mobile…`
+                    : 'Search across 16,047 records (15,429 survey + 618 scooty) — shows all benefits received'
                   : dataError ? 'Failed to load data' : 'Loading records…'}
               </div>
             </div>
@@ -394,7 +529,7 @@ export default function Beneficiary() {
               ref={inputRef}
               value={query}
               onChange={e => setQuery(e.target.value)}
-              placeholder="Enter UDID / Aadhaar / Name / Mobile / NIDC / Vehicle No…"
+              placeholder={filterLabel ? 'Search within filtered results…' : 'Enter UDID / Aadhaar / Name / Mobile / NIDC / Vehicle No…'}
               disabled={!dataLoaded}
               style={{
                 width: '100%', padding: '14px 40px 14px 44px',
@@ -403,10 +538,9 @@ export default function Beneficiary() {
                 background: dataLoaded ? '#fff' : '#f8f9fa',
                 color: '#202124', transition: 'border-color 0.15s', boxSizing: 'border-box',
               }}
-              autoFocus
             />
             {query && (
-              <button onClick={() => { setQuery(''); setResults([]); inputRef.current?.focus() }}
+              <button onClick={() => { setQuery(''); setSearchResults([]); inputRef.current?.focus() }}
                 style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#9aa0a6', display: 'flex' }}>
                 <X size={18} />
               </button>
@@ -420,7 +554,7 @@ export default function Beneficiary() {
           </div>
         </div>
 
-        {/* Error / loading */}
+        {/* Loading / error */}
         {!dataLoaded && !dataError && (
           <div style={{ textAlign: 'center', padding: 40, color: '#9aa0a6' }}>
             <Clock size={32} style={{ marginBottom: 12 }} />
@@ -435,78 +569,33 @@ export default function Beneficiary() {
         )}
 
         {/* Results */}
-        {results.length > 0 && (
+        {displayList.length > 0 && (
           <div style={{ maxWidth: 700, margin: '0 auto' }}>
             <div style={{ fontSize: 13, color: '#5f6368', marginBottom: 12, fontWeight: 500 }}>
-              {results.length >= 20 ? 'Showing top 20 matches' : `${results.length} result${results.length !== 1 ? 's' : ''} found`}
-              <span style={{ color: '#9aa0a6', fontWeight: 400, marginLeft: 8 }}>· Click any record to view all benefits</span>
+              {inSearchMode
+                ? (searchResults.length >= 50 ? 'Showing top 50 matches' : `${searchResults.length} result${searchResults.length !== 1 ? 's' : ''} found`)
+                : `Showing ${Math.min(page * PAGE_SIZE, totalFiltered).toLocaleString()} of ${totalFiltered.toLocaleString()} records`}
+              <span style={{ color: '#9aa0a6', fontWeight: 400, marginLeft: 8 }}>· Click any record to view full profile & benefits</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {results.map((r, i) => {
-                // Quick benefit preview
-                const scootyMatch = scootyIdx ? crossReference(r, scootyIdx).length > 0 : r.src === 'scooty'
-                const isScooty = r.src === 'scooty'
-                return (
-                  <div key={i} onClick={() => setSelected(r)} style={{
-                    background: '#fff', borderRadius: 12, padding: '14px 16px',
-                    border: '1px solid #f0f0f0', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', gap: 16,
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.06)', transition: 'box-shadow 0.15s, border-color 0.15s',
-                  }}
-                    onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 3px 12px rgba(0,0,0,0.12)'; e.currentTarget.style.borderColor = '#1a73e8' }}
-                    onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)'; e.currentTarget.style.borderColor = '#f0f0f0' }}
-                  >
-                    <div style={{
-                      width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
-                      background: isScooty ? '#1a73e8' : '#34a853',
-                      color: '#fff', fontWeight: 700, fontSize: 16,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      {(r.n || '?')[0].toUpperCase()}
-                    </div>
-
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, fontSize: 15, color: '#202124', marginBottom: 3 }}>{r.n || '—'}</div>
-                      <div style={{ fontSize: 12, color: '#5f6368', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                        {r.g && <span>{r.g}</span>}
-                        {r.age && <span>Age {r.age}</span>}
-                        {r.blk && <span>📍 {r.blk}</span>}
-                        {r.mob && <span>📞 {r.mob}</span>}
-                      </div>
-                      {/* Benefits row */}
-                      <div style={{ fontSize: 11, marginTop: 6, display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-                        <span style={{ fontSize: 10, color: '#9aa0a6', fontWeight: 600, textTransform: 'uppercase' }}>Benefits:</span>
-                        <span style={{
-                          background: '#e8f0fe', color: '#1967d2',
-                          padding: '2px 8px', borderRadius: 10, fontWeight: 600, fontSize: 11,
-                        }}>✓ DAP Survey</span>
-                        {(isScooty || scootyMatch) && (
-                          <span style={{ background: '#f3e8ff', color: '#7c3aed', padding: '2px 8px', borderRadius: 10, fontWeight: 600, fontSize: 11 }}>
-                            🛵 Scooty {r.veh ? `(${r.veh})` : ''}
-                          </span>
-                        )}
-                        {r.dis && (
-                          <span style={{ background: '#fce8e6', color: '#c62828', padding: '2px 8px', borderRadius: 10, fontWeight: 500 }}>
-                            {r.dis.split('(')[0].trim()}
-                          </span>
-                        )}
-                        {(r.aad === 'Aadhaar Available' || r.aadhar) && (
-                          <span style={{ background: '#e6f4ea', color: '#137333', padding: '2px 8px', borderRadius: 10, fontWeight: 500 }}>Aadhaar ✓</span>
-                        )}
-                        {r.udid && <span style={{ background: '#e6f4ea', color: '#137333', padding: '2px 8px', borderRadius: 10, fontWeight: 500 }}>UDID ✓</span>}
-                        {r.nidc && <span style={{ background: '#e8f0fe', color: '#1967d2', padding: '2px 8px', borderRadius: 10, fontWeight: 500 }}>NIDC ✓</span>}
-                      </div>
-                    </div>
-                    <ChevronRight size={18} color="#9aa0a6" style={{ flexShrink: 0 }} />
-                  </div>
-                )
-              })}
+              {displayList.map((r, i) => (
+                <ResultRow key={i} r={r} onSelect={setSelected} />
+              ))}
             </div>
+            {hasMore && (
+              <button onClick={() => setPage(p => p + 1)} style={{
+                display: 'block', width: '100%', marginTop: 16, padding: '12px',
+                background: '#f8f9fa', border: '1px solid #e0e0e0', borderRadius: 10,
+                fontSize: 13, color: '#1a73e8', fontWeight: 600, cursor: 'pointer',
+              }}>
+                Load more ({Math.min(PAGE_SIZE, totalFiltered - page * PAGE_SIZE)} remaining of {totalFiltered - page * PAGE_SIZE})
+              </button>
+            )}
           </div>
         )}
 
         {/* No results */}
-        {query.length >= 2 && dataLoaded && results.length === 0 && (
+        {inSearchMode && dataLoaded && searchResults.length === 0 && (
           <div style={{ textAlign: 'center', padding: 48, color: '#9aa0a6' }}>
             <Search size={40} style={{ marginBottom: 12, opacity: 0.4 }} />
             <div style={{ fontSize: 15, fontWeight: 500, color: '#5f6368' }}>No matching records</div>
@@ -514,8 +603,8 @@ export default function Beneficiary() {
           </div>
         )}
 
-        {/* Empty state */}
-        {!query && dataLoaded && (
+        {/* Empty state — no filter, no search */}
+        {!query && !filterLabel && dataLoaded && (
           <div style={{ textAlign: 'center', padding: 48, color: '#9aa0a6', maxWidth: 500, margin: '0 auto' }}>
             <div style={{ width: 80, height: 80, borderRadius: '50%', background: '#e8f0fe', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
               <Gift size={36} color="#1a73e8" />
@@ -524,12 +613,13 @@ export default function Beneficiary() {
               Beneficiary & Benefits Lookup
             </div>
             <div style={{ fontSize: 13, lineHeight: 1.7, color: '#5f6368' }}>
-              Enter any identifier to instantly see the person's profile and <strong>all government scheme benefits received</strong> — including Scooty Scheme, DAP registration, UDID/NIDC status, and more.
+              Enter any identifier to instantly see the person's profile and <strong>all government scheme benefits received</strong> — or click any stat card or table row across the dashboard to view that group's beneficiaries.
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 20, flexWrap: 'wrap' }}>
               {[
                 { icon: Bike, label: 'Scooty Scheme', color: '#1a73e8' },
                 { icon: FileText, label: 'DAP Survey', color: '#34a853' },
+                { icon: Filter, label: 'Filter by Block / Gender / UDID…', color: '#9334e6' },
               ].map(({ icon: Icon, label, color }) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6, background: color + '12', border: `1px solid ${color}30`, borderRadius: 10, padding: '8px 14px' }}>
                   <Icon size={16} color={color} />
@@ -537,6 +627,14 @@ export default function Beneficiary() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Filter active but no search and data loading */}
+        {filterLabel && !dataLoaded && !dataError && (
+          <div style={{ textAlign: 'center', padding: 40, color: '#9aa0a6' }}>
+            <Clock size={32} style={{ marginBottom: 12 }} />
+            <div style={{ fontSize: 14 }}>Loading — applying filter: {filterLabel}…</div>
           </div>
         )}
       </div>

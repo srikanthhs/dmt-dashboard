@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   BarChart, Bar, PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend, LabelList, XAxis
 } from 'recharts'
@@ -26,14 +27,13 @@ const waterData = Object.entries(stats.water).map(([n,v]) => ({ name:n, value:v 
 const toiletData = Object.entries(stats.toilet).map(([n,v]) => ({ name:n, value:v }))
 
 export default function Infrastructure() {
+  const navigate = useNavigate()
   const elecTotal = stats.electricity.Yes + stats.electricity.No
   const elecPct = elecTotal > 0 ? ((stats.electricity.Yes / elecTotal) * 100).toFixed(1) : '—'
 
   const houseRef = useRef()
   const waterRef = useRef()
   const toiletRef = useRef()
-
-  const scrollTo = (ref) => ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
 
   return (
     <div>
@@ -42,16 +42,16 @@ export default function Infrastructure() {
         <div style={{ display:'flex', gap:16, flexWrap:'wrap', marginBottom:24 }}>
           <StatCard label="Own House" value={stats.house_status.Own}
             icon={Home} color="#1a73e8" sub="Ownership status"
-            onClick={() => scrollTo(houseRef)} />
+            onClick={() => navigate('/beneficiary?hstat=Own')} />
           <StatCard label="Electricity Access" value={stats.electricity.Yes}
             icon={Zap} color="#fbbc04" sub={`${elecPct}% coverage`}
-            onClick={() => scrollTo(houseRef)} />
+            onClick={() => navigate('/beneficiary?elec=Yes')} />
           <StatCard label="Tap Water Access" value={stats.water['Tap Water']}
             icon={Droplets} color="#34a853" sub="Primary water source"
-            onClick={() => scrollTo(waterRef)} />
+            onClick={() => navigate('/beneficiary?water=Tap Water')} />
           <StatCard label="Individual Toilet" value={stats.toilet['Individual Toilet']}
             icon={Wind} color="#9334e6" sub="Sanitation access"
-            onClick={() => scrollTo(toiletRef)} />
+            onClick={() => navigate('/beneficiary?toilet=Individual Toilet')} />
         </div>
 
         <div ref={houseRef} style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:16 }}>

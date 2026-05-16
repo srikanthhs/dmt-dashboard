@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   BarChart, Bar, PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend, LabelList, XAxis, YAxis, CartesianGrid
 } from 'recharts'
@@ -90,6 +91,7 @@ const tableData = [
 ]
 
 export default function Benefits() {
+  const navigate = useNavigate()
   const coverageRef = useRef()
   const udidRef = useRef()
   const aadhaarRef = useRef()
@@ -139,19 +141,19 @@ export default function Benefits() {
           <StatCard label="UDID Card Holders" value={stats.udid_holders}
             icon={FileCheck} color="#1a73e8"
             sub={`${((stats.udid_holders/stats.total)*100).toFixed(1)}% issued`}
-            onClick={() => scrollTo(udidRef)} />
+            onClick={() => navigate('/beneficiary?udid=yes')} />
           <StatCard label="NIDC Card Holders" value={stats.nidc_holders}
             icon={CreditCard} color="#34a853"
             sub={`${((stats.nidc_holders/stats.total)*100).toFixed(1)}% issued`}
-            onClick={() => scrollTo(coverageRef)} />
+            onClick={() => navigate('/beneficiary?nidc=yes')} />
           <StatCard label="Aadhaar Linked" value={stats.aadhaar_linked}
             icon={ShieldCheck} color="#fbbc04"
             sub={`${((stats.aadhaar_linked/stats.total)*100).toFixed(1)}% linked`}
-            onClick={() => scrollTo(aadhaarRef)} />
+            onClick={() => navigate('/beneficiary?aad=yes')} />
           <StatCard label="Pending UDID" value={noUdid}
             icon={AlertCircle} color="#ea4335"
             sub="Require UDID enrollment"
-            onClick={() => scrollTo(udidRef)} />
+            onClick={() => navigate('/beneficiary?udid=no')} />
         </div>
 
         {/* Action Priority Strip */}

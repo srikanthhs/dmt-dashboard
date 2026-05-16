@@ -5,6 +5,7 @@ import ChartCard from '../components/ChartCard'
 import TopBar from '../components/TopBar'
 import stats from '../data/stats'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Map } from 'lucide-react'
 
 const COLORS = ['#1a73e8','#34a853','#fbbc04','#ea4335','#9334e6','#00acc1']
@@ -41,6 +42,7 @@ const SortIcon = ({ col, sortKey, sortDir }) => {
 }
 
 export default function Blocks() {
+  const navigate = useNavigate()
   const [selected, setSelected] = useState('Mayiladuthurai')
   const [sortKey, setSortKey] = useState('total')
   const [sortDir, setSortDir] = useState('desc')
@@ -104,6 +106,12 @@ export default function Blocks() {
               {b}
             </button>
           ))}
+          <button onClick={() => navigate(`/beneficiary?blk=${encodeURIComponent(selected)}`)} style={{
+            padding:'8px 20px', borderRadius:20, border:'1px solid #1a73e830', cursor:'pointer',
+            background: '#e8f0fe', color: '#1a73e8', fontWeight: 600, fontSize: 13,
+          }}>
+            View {selected} beneficiaries →
+          </button>
         </div>
 
         {/* Selected block detail */}
@@ -209,7 +217,7 @@ export default function Blocks() {
               <tbody>
                 {sortedTable.map((row, i) => (
                   <tr key={i}
-                    onClick={() => setSelected(row.block)}
+                    onClick={() => navigate(`/beneficiary?blk=${encodeURIComponent(row.block)}`)}
                     style={{ borderBottom:'1px solid #f0f0f0', cursor:'pointer', background: selected === row.block ? '#e8f0fe' : 'transparent' }}
                     onMouseEnter={e => { if (selected !== row.block) e.currentTarget.style.background = '#f8f9fa' }}
                     onMouseLeave={e => { if (selected !== row.block) e.currentTarget.style.background = '' }}>
@@ -231,7 +239,7 @@ export default function Blocks() {
               </tbody>
             </table>
           </div>
-          <p style={{ fontSize:11, color:'#9aa0a6', marginTop:10 }}>Click any row to view that block's detailed breakdown above.</p>
+          <p style={{ fontSize:11, color:'#9aa0a6', marginTop:10 }}>Click any row to view all beneficiaries in that block.</p>
         </ChartCard>
       </div>
     </div>

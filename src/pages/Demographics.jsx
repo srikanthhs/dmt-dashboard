@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   BarChart, Bar, PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
   Legend, XAxis, YAxis, CartesianGrid, LabelList
@@ -37,12 +38,11 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 
 export default function Demographics() {
+  const navigate = useNavigate()
   const genderRef = useRef()
   const casteRef = useRef()
   const maritalRef = useRef()
   const ageRef = useRef()
-
-  const scrollTo = (ref) => ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
 
   return (
     <div>
@@ -50,13 +50,13 @@ export default function Demographics() {
       <div style={{ padding:24 }}>
         <div style={{ display:'flex', gap:16, flexWrap:'wrap', marginBottom:24 }}>
           <StatCard label="Male" value={stats.gender.Male} icon={User} color="#1a73e8" sub={`${((stats.gender.Male/stats.total)*100).toFixed(1)}% of total`}
-            onClick={() => scrollTo(genderRef)} />
+            onClick={() => navigate('/beneficiary?g=Male')} />
           <StatCard label="Female" value={stats.gender.Female} icon={User} color="#ea4335" sub={`${((stats.gender.Female/stats.total)*100).toFixed(1)}% of total`}
-            onClick={() => scrollTo(genderRef)} />
+            onClick={() => navigate('/beneficiary?g=Female')} />
           <StatCard label="Scheduled Caste" value={stats.caste['Scheduled Caste']} icon={Users} color="#34a853" sub="Largest caste group"
-            onClick={() => scrollTo(casteRef)} />
+            onClick={() => navigate('/beneficiary?caste=Scheduled Caste')} />
           <StatCard label="Married" value={stats.marital.Married} icon={Heart} color="#9334e6" sub="Marital status"
-            onClick={() => scrollTo(maritalRef)} />
+            onClick={() => navigate('/beneficiary?g=Male')} />
         </div>
 
         {/* Insight strip */}

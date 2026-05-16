@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   BarChart, Bar, PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend, XAxis, YAxis, CartesianGrid, LabelList
 } from 'recharts'
@@ -42,11 +43,10 @@ export default function Livelihood() {
   const unemployedPct = empTotal > 0 ? ((stats.employment_status.No / empTotal) * 100).toFixed(1) : '—'
   const empPct = empTotal > 0 ? ((stats.employed / empTotal) * 100).toFixed(1) : '—'
 
+  const navigate = useNavigate()
   const empRef = useRef()
   const typeRef = useRef()
   const incomeRef = useRef()
-
-  const scrollTo = (ref) => ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
 
   const totalEmpType = empTypeData.reduce((s, d) => s + d.value, 0)
 
@@ -57,16 +57,16 @@ export default function Livelihood() {
         <div style={{ display:'flex', gap:16, flexWrap:'wrap', marginBottom:24 }}>
           <StatCard label="Currently Employed" value={stats.employed}
             icon={Briefcase} color="#34a853" sub={`${empPct}% of surveyed`}
-            onClick={() => scrollTo(empRef)} />
+            onClick={() => navigate('/beneficiary?emp=yes')} />
           <StatCard label="Unemployed" value={stats.employment_status.No}
             icon={XCircle} color="#ea4335" sub={`${unemployedPct}% of surveyed`}
-            onClick={() => scrollTo(empRef)} />
+            onClick={() => navigate('/beneficiary?emp=no')} />
           <StatCard label="Avg Monthly Income" value={stats.income_stats.mean > 0 ? `₹${stats.income_stats.mean.toLocaleString()}` : 'N/A'}
             icon={DollarSign} color="#1a73e8" sub="Among employed persons"
-            onClick={() => scrollTo(incomeRef)} />
+            onClick={() => navigate('/beneficiary?emp=yes')} />
           <StatCard label="Median Income" value={stats.income_stats.median > 0 ? `₹${stats.income_stats.median.toLocaleString()}` : 'N/A'}
             icon={TrendingUp} color="#fbbc04" sub="50th percentile"
-            onClick={() => scrollTo(incomeRef)} />
+            onClick={() => navigate('/beneficiary?emp=yes')} />
         </div>
 
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:16 }}>

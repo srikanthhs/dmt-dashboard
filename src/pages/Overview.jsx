@@ -85,22 +85,22 @@ export default function Overview() {
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 16 }}>
           <StatCard label="Total Persons Surveyed" value={stats.total}
             icon={Users} color="#1a73e8" sub="Across all 6 blocks"
-            onClick={() => navigate('/demographics')} />
+            onClick={() => navigate('/beneficiary')} />
           <StatCard label="UDID Card Holders" value={stats.udid_holders}
             icon={FileCheck} color="#34a853" sub={`${udid_pct}% coverage`}
-            onClick={() => navigate('/benefits')} />
+            onClick={() => navigate('/beneficiary?udid=yes')} />
           <StatCard label="Aadhaar Linked" value={stats.aadhaar_linked}
             icon={ShieldCheck} color="#fbbc04" sub={`${aadhaar_pct}% linked`}
-            onClick={() => navigate('/benefits')} />
+            onClick={() => navigate('/beneficiary?aad=yes')} />
           <StatCard label="Currently Employed" value={stats.employed}
             icon={Briefcase} color="#ea4335" sub={`${employed_pct}% employment rate`}
-            onClick={() => navigate('/livelihood')} />
+            onClick={() => navigate('/beneficiary?emp=yes')} />
           <StatCard label="NIDC Card Holders" value={stats.nidc_holders}
             icon={UserCheck} color="#9334e6" sub="National Identity Card"
-            onClick={() => navigate('/benefits')} />
+            onClick={() => navigate('/beneficiary?nidc=yes')} />
           <StatCard label="Permanent Disability" value={stats.permanent_disability}
             icon={Activity} color="#00acc1" sub="vs Temporary cases"
-            onClick={() => navigate('/disability')} />
+            onClick={() => navigate('/beneficiary?nat=Permanent')} />
         </div>
 
         {/* Key Insights Strip */}
