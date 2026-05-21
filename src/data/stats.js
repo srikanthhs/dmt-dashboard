@@ -1,173 +1,184 @@
-// Source: MAYILADUTHURAI_surveylist till 1-2026.xlsx — 15,429 records (Jan 2026)
-// Employment/housing/infrastructure data: Jan 2026 survey
+// Auto-generated from beneficiaries.json after deduplication (2026-05-21)
 const stats = {
-  total: 15429,
-  udid_holders: 4849,
-  nidc_holders: 9936,
-  aadhaar_linked: 12823,
-  employed: 1150,
-  permanent_disability: 9508,
-
-  gender: { Male: 9388, Female: 5808, Transgender: 4 },
-
-  blocks: {
-    Mayiladuthurai: 3518,
-    Sirkali: 3456,
-    Kuthalam: 3007,
-    Sembanarkoil: 2687,
-    Kollidam: 2209,
-    Municipality: 552,
+  "total": 12477,
+  "udid_holders": 3998,
+  "nidc_holders": 7668,
+  "aadhaar_linked": 10816,
+  "employed": 958,
+  "permanent_disability": 7326,
+  "gender": {
+    "Male": 7319,
+    "Female": 4929,
+    "Transgender": 3
   },
-
-  disability_type: {
-    'Locomotor Disability': 4309,
-    'Intellectual Disability': 1950,
-    'Hearing Impairment': 1302,
-    'Mental Illness': 805,
-    'Blindness': 483,
-    'Multiple Disabilities': 412,
-    'Cerebral Palsy': 209,
-    'Low Vision': 206,
-    'Speech & Language': 125,
-    'Leprosy Cured': 67,
-    'Autism Spectrum': 59,
-    'Specific Learning': 29,
-    'Thalassemia': 25,
-    'Dwarfism': 13,
-    'Acid Attack': 10,
-    'Muscular Dystrophy': 9,
-    'Haemophilia': 6,
-    'Sickle Cell': 2,
-    'Chronic Neurological': 1,
+  "blocks": {
+    "Kuthalam": 2473,
+    "Mayiladuthurai": 2947,
+    "Sembanarkoil": 2277,
+    "Sirkali": 2441,
+    "Kollidam": 1921,
+    "Municipality": 418
   },
-
-  nature: { Permanent: 9508, Temporary: 552 },
-
-  caste: {
-    'Scheduled Caste': 5723,
-    'Most Backward Classes': 3668,
-    'Backward Classes': 3013,
-    "Don't want to disclose": 1570,
-    'Other Classes': 1110,
-    'Scheduled Tribes': 100,
+  "disability_type": {
+    "Locomotor Disability": 3512,
+    "Intellectual Disability": 1581,
+    "Hearing Impairment": 1088,
+    "Blindness": 397,
+    "Multiple Disabilities": 340,
+    "Mental Illness": 205,
+    "Low Vision": 174,
+    "Cerebral Palsy": 164,
+    "Speech & Language": 101,
+    "Leprosy Cured": 61,
+    "Dwarfism": 39,
+    "Muscular Dystrophy": 35,
+    "Chronic Neurological": 23,
+    "Acid Attack": 11,
+    "Autism Spectrum": 9,
+    "Haemophilia": 8,
+    "Parkinsons Disease": 7,
+    "Thalassemia": 3,
+    "Specific Learning": 2,
+    "Sickle Cell": 1
   },
-
-  marital: {
-    Married: 4575,
-    Unmarried: 3932,
-    Widow: 186,
-    "Don't disclose": 105,
-    Deserted: 43,
-    Divorced: 22,
-    Separated: 18,
+  "nature": {
+    "Temporary": 441,
+    "Permanent": 7326
   },
-
-  education: {
-    'Below 5th Std': 1757,
-    'Upto 8th Std': 1558,
-    'No Formal Education': 1492,
-    'Upto 10th Std': 1436,
-    'Upto 5th Std': 1136,
-    'Not Applicable': 1035,
-    'Upto 12th Std': 525,
-    'Under Graduate': 372,
-    Diploma: 237,
-    'Post Graduate': 208,
-    Others: 87,
-    'Ph.D': 16,
+  "caste": {
+    "Scheduled Caste": 4777,
+    "Most Backward Classes": 3147,
+    "Backward Classes": 2528,
+    "Other Classes": 921,
+    "Don't want to disclose": 786,
+    "Scheduled Tribes": 78
   },
-
-  area_type: { Rural: 11370, Urban: 1488 },
-
-  employment_status: { No: 8010, Yes: 1150 },
-  employment_type: {
-    'Self Employed': 312,
-    'Wage Employment': 198,
-    'Government': 87,
-    'Private': 423,
-    'Agricultural': 130,
+  "marital": {
+    "Married": 3742,
+    "Unmarried": 2805,
+    "Widow": 158,
+    "Don't disclose": 46,
+    "Deserted": 35,
+    "Divorced": 20,
+    "Separated": 15
   },
-
-  house_status: { Own: 8123, Rented: 1245, Others: 612 },
-  house_type: {
-    Pucca: 5234,
-    'Semi-Pucca': 3112,
-    Kutcha: 1654,
-    Others: 480,
+  "education": {
+    "Below 5th Std": 1439,
+    "Upto 8th Std": 1194,
+    "No Formal Education": 1132,
+    "Upto 10th Std": 1068,
+    "Not Applicable": 799,
+    "Upto 5th Std": 772,
+    "Upto 12th Std": 423,
+    "Under Graduate": 300,
+    "Diploma": 195,
+    "Post Graduate": 181,
+    "Others": 83,
+    "Ph.D": 13
   },
-
-  electricity: { Yes: 9856, No: 624 },
-  water: {
-    'Tap Water': 5234,
-    'Well Water': 2198,
-    'Bore Well': 2456,
-    'River/Pond': 412,
-    Others: 180,
+  "area_type": {
+    "Rural": 8908,
+    "Urban": 1285
   },
-  toilet: {
-    'Individual Toilet': 7234,
-    'Community Toilet': 1123,
-    'Open Defecation': 2123,
+  "employment_status": {
+    "Yes": 958,
+    "No": 6087
   },
-
-  age_groups: {
-    '0-10': 312,
-    '11-20': 1423,
-    '21-30': 1876,
-    '31-40': 2134,
-    '41-50': 2567,
-    '51-60': 2389,
-    '61-70': 1876,
-    '71-80': 1234,
-    '80+': 456,
+  "employment_type": {
+    "Wage Employment": 602,
+    "Self Employed": 104,
+    "Government": 100,
+    "Private": 82,
+    "Agricultural": 48,
+    "Unpaid": 17,
+    "Others (Specify)": 5
   },
-
-  income_stats: { mean: 8218.67, median: 5000, count_with_income: 935 },
-
-  block_disability: {
-    Mayiladuthurai: {
-      'Locomotor Disability': 987,
-      'Intellectual Disability': 534,
-      'Hearing Impairment': 356,
-      'Mental Illness': 213,
-      Blindness: 134,
+  "house_status": {
+    "Own": 6968,
+    "Rented": 560,
+    "Lease": 16,
+    "Others": 119,
+    "Homeless": 1
+  },
+  "house_type": {
+    "Pucca": 3556,
+    "Kutcha": 2881,
+    "Semi-Pucca": 1098
+  },
+  "electricity": {
+    "Yes": 7337,
+    "No": 206
+  },
+  "water": {
+    "Tap Water": 4564,
+    "Well Water": 2858,
+    "Others": 119
+  },
+  "toilet": {
+    "Individual Toilet": 5995,
+    "Open Defecation": 1141,
+    "Community Toilet": 402
+  },
+  "age_groups": {
+    "0-10": 405,
+    "11-20": 1211,
+    "21-30": 1442,
+    "31-40": 1955,
+    "41-50": 2397,
+    "51-60": 2287,
+    "61-70": 1683,
+    "71-80": 722,
+    "80+": 149
+  },
+  "income_stats": {
+    "mean": 8540.57,
+    "median": 5000,
+    "count_with_income": 768
+  },
+  "block_disability": {
+    "Kuthalam": {
+      "Locomotor Disability": 633,
+      "Intellectual Disability": 288,
+      "Hearing Impairment": 216,
+      "Mental Illness": 28,
+      "Blindness": 64
     },
-    Sirkali: {
-      'Locomotor Disability': 965,
-      'Intellectual Disability': 512,
-      'Hearing Impairment': 334,
-      'Mental Illness': 198,
-      Blindness: 121,
+    "Mayiladuthurai": {
+      "Locomotor Disability": 858,
+      "Intellectual Disability": 375,
+      "Hearing Impairment": 289,
+      "Mental Illness": 57,
+      "Blindness": 103
     },
-    Kuthalam: {
-      'Locomotor Disability': 834,
-      'Intellectual Disability': 443,
-      'Hearing Impairment': 289,
-      'Mental Illness': 172,
-      Blindness: 98,
+    "Sembanarkoil": {
+      "Locomotor Disability": 625,
+      "Intellectual Disability": 294,
+      "Hearing Impairment": 203,
+      "Mental Illness": 26,
+      "Blindness": 88
     },
-    Sembanarkoil: {
-      'Locomotor Disability': 723,
-      'Intellectual Disability': 387,
-      'Hearing Impairment': 251,
-      'Mental Illness': 149,
-      Blindness: 89,
+    "Sirkali": {
+      "Locomotor Disability": 696,
+      "Intellectual Disability": 337,
+      "Hearing Impairment": 177,
+      "Mental Illness": 75,
+      "Blindness": 54
     },
-    Kollidam: {
-      'Locomotor Disability': 612,
-      'Intellectual Disability': 312,
-      'Hearing Impairment': 198,
-      'Mental Illness': 123,
-      Blindness: 78,
+    "Kollidam": {
+      "Locomotor Disability": 552,
+      "Intellectual Disability": 214,
+      "Hearing Impairment": 153,
+      "Mental Illness": 17,
+      "Blindness": 79
     },
-    Municipality: {
-      'Locomotor Disability': 188,
-      'Intellectual Disability': 98,
-      'Hearing Impairment': 74,
-      'Mental Illness': 49,
-      Blindness: 31,
-    },
-  },
+    "Municipality": {
+      "Locomotor Disability": 148,
+      "Intellectual Disability": 73,
+      "Hearing Impairment": 50,
+      "Mental Illness": 2,
+      "Blindness": 9
+    }
+  }
 }
 
 export default stats

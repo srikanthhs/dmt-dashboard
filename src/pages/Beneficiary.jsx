@@ -479,7 +479,7 @@ export default function Beneficiary() {
 
   return (
     <div>
-      <TopBar title="Individual Search" subtitle="Search 16,047 records — enter UDID, Aadhaar, Name, Mobile, NIDC or Vehicle No to see all benefits" />
+      <TopBar title="Individual Search" subtitle="Search 13,095 records — enter UDID, Aadhaar, Name, Mobile, NIDC or Vehicle No to see all benefits" />
       <div style={{ padding: 24 }}>
 
         {/* Active filter banner */}
@@ -527,7 +527,7 @@ export default function Beneficiary() {
                 {dataLoaded
                   ? filterLabel
                     ? `${totalFiltered.toLocaleString()} records in this filter — search by name, ID, mobile…`
-                    : 'Search across 16,047 records (15,429 survey + 618 scooty) — shows all benefits received'
+                    : 'Search across 13,095 records (12,477 survey + 618 scooty) — shows all benefits received'
                   : dataError ? 'Failed to load data' : 'Loading records…'}
               </div>
             </div>
