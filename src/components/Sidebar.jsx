@@ -1,7 +1,8 @@
 import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, Users, Activity, Briefcase,
-  GraduationCap, Home, FileText, Map, ChevronLeft, ChevronRight, UserSearch, Bike
+  GraduationCap, Home, FileText, Map, ChevronLeft, ChevronRight, UserSearch, Bike,
+  HeartHandshake, Award, Landmark, BookOpen, ShieldAlert, Copy
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -15,7 +16,13 @@ const NAV = [
   { to: '/infrastructure', icon: Home, label: 'Infrastructure' },
   { to: '/blocks', icon: Map, label: 'Block-wise' },
   { to: '/scooty', icon: Bike, label: 'Scooty Scheme' },
+  { to: '/marriage-assistance', icon: HeartHandshake, label: 'Marriage Assistance' },
+  { to: '/scholarship', icon: Award, label: 'Scholarship' },
+  { to: '/bank-loan', icon: Landmark, label: 'Bank Loan Subsidy' },
+  { to: '/readers-allowance', icon: BookOpen, label: 'Readers Allowance' },
+  { to: '/udid-uncovered', icon: ShieldAlert, label: 'UDID Not Covered' },
   { to: '/beneficiary', icon: UserSearch, label: 'Individual Search' },
+  { to: '/dedup', icon: Copy, label: 'Data Dedup' },
 ]
 
 export default function Sidebar() {

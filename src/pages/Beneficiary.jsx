@@ -3,14 +3,31 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import {
   Search, X, User, MapPin, FileText, Heart, Home,
   Briefcase, GraduationCap, ChevronRight, AlertCircle,
-  Clock, Bike, Gift, CheckCircle, XCircle, Filter
+  Clock, Bike, Gift, CheckCircle, XCircle, Filter,
+  HeartHandshake, Award, Landmark, BookOpen, ShieldAlert
 } from 'lucide-react'
 import TopBar from '../components/TopBar'
 
 let cachedSurvey = null
 let cachedScooty = null
+let cachedMg = null
+let cachedScholarship = null
+let cachedBankloan = null
+let cachedReaders = null
+let cachedUdidUncovered = null
 let scootyIdx = null
 let surveyIdx = null
+let mgIdx = null
+let scholarshipIdx = null
+let bankloanIdx = null
+let readersIdx = null
+let udidUncoveredIdx = null
+
+function cachedFetch(url, getCache, setCache) {
+  const c = getCache()
+  if (c) return Promise.resolve(c)
+  return fetch(url).then(r => r.json()).then(d => { setCache(d); return d })
+}
 
 const FIELD_MAP = {
   n: 'Name', dob: 'Date of Birth', age: 'Age', g: 'Gender', mob: 'Mobile',
@@ -25,18 +42,31 @@ const FIELD_MAP = {
   door: 'Door No', str: 'Street', stat: 'Status', dap: 'DAP Name', pcare: 'Primary Care',
   aadhar: 'Aadhaar No', veh: 'Vehicle No', rto: 'RTO', fy: 'Financial Year',
   leg: 'Leg Type', stype: 'Scooter Type', fund: 'Fund Type', mla: 'MLA Constituency',
-  addr: 'Address',
+  addr: 'Address', dist: 'District', father: 'Father Name', acc: 'A/C Number',
+  ifsc: 'IFSC', bank: 'Bank', cls: 'Class', amt: 'Amount', app_no: 'Application No',
+  app_date: 'Application Date', branch: 'Branch', business: 'Business',
+  loan_amt: 'Loan Amount', subsidy_amt: 'Subsidy Amount',
 }
 
 const SECTIONS = [
-  { label: 'Personal Information', icon: User, color: '#1a73e8', fields: ['n','dob','age','g','mar','caste','mob'] },
+  { label: 'Personal Information', icon: User, color: '#1a73e8', fields: ['n','dob','age','g','mar','caste','mob','father'] },
   { label: 'Disability Details', icon: Heart, color: '#ea4335', fields: ['dis','dpct','nat','dreason','pcare'] },
   { label: 'Documents & IDs', icon: FileText, color: '#34a853', fields: ['aad','aadhar','nidc','udid','vid','rc','pds','stat'] },
   { label: 'Livelihood', icon: Briefcase, color: '#9334e6', fields: ['emp','etype','inc'] },
   { label: 'Education', icon: GraduationCap, color: '#fbbc04', fields: ['edu'] },
   { label: 'Infrastructure', icon: Home, color: '#00acc1', fields: ['hstat','htype','elec','water','toilet','fam'] },
-  { label: 'Address', icon: MapPin, color: '#ff7043', fields: ['door','str','vil','blk','tal','pin','area','addr'] },
+  { label: 'Address', icon: MapPin, color: '#ff7043', fields: ['door','str','vil','blk','tal','dist','pin','area','addr'] },
 ]
+
+const SRC_META = {
+  scooty: { color: '#1a73e8' },
+  mg: { color: '#9334e6' },
+  scholarship: { color: '#1967d2' },
+  bankloan: { color: '#34a853' },
+  readers: { color: '#00acc1' },
+  udid_uncovered: { color: '#f9a825' },
+  survey: { color: '#34a853' },
+}
 
 function buildIndex(records, keys) {
   const idx = {}
@@ -73,6 +103,7 @@ function crossReference(person, sourceIdx) {
 function applyFilter(records, params) {
   return records.filter(r => {
     if (params.blk && r.blk !== params.blk) return false
+    if (params.vil && r.vil !== params.vil) return false
     if (params.g && r.g !== params.g) return false
     if (params.udid === 'yes' && (!r.udid || String(r.udid) === 'nan')) return false
     if (params.udid === 'no' && r.udid && String(r.udid) !== 'nan') return false
@@ -101,6 +132,7 @@ function applyFilter(records, params) {
 function getFilterLabel(params) {
   const labels = {
     blk:    v => `Block: ${v}`,
+    vil:    v => `Village / Panchayat: ${v}`,
     g:      v => `Gender: ${v}`,
     udid:   v => v === 'yes' ? 'With UDID Card' : 'Without UDID Card',
     nidc:   v => v === 'yes' ? 'With NIDC Card' : 'Without NIDC Card',
@@ -122,62 +154,132 @@ function getFilterLabel(params) {
   return Object.entries(params).map(([k, v]) => labels[k]?.(v) || `${k}: ${v}`).join(' · ')
 }
 
+function scootyBenefit(r) {
+  return {
+    scheme: 'Scooty Scheme', icon: Bike, color: '#1a73e8', status: 'received',
+    details: [
+      { label: 'Vehicle No', value: r.veh || '—' },
+      { label: 'Financial Year', value: r.fy || '—' },
+      { label: 'RTO', value: r.rto || '—' },
+      { label: 'Leg Type', value: r.leg || '—' },
+      { label: 'Scooter Type', value: r.stype || '—' },
+      { label: 'Fund Type', value: r.fund || '—' },
+      { label: 'MLA Constituency', value: r.mla || '—' },
+    ].filter(d => d.value && d.value !== '—'),
+  }
+}
+
+function surveyBenefit(r) {
+  return {
+    scheme: 'DAP Survey Registration', icon: FileText, color: '#34a853', status: 'registered',
+    details: [
+      { label: 'Block', value: r.blk || '—' },
+      { label: 'Village', value: r.vil || '—' },
+      { label: 'Status', value: r.stat || '—' },
+      { label: 'Employed', value: r.emp || '—' },
+      { label: 'Monthly Income', value: r.inc ? `₹${r.inc}` : '—' },
+      { label: 'UDID Status', value: r.udid ? 'Issued' : 'Not Issued' },
+      { label: 'NIDC Status', value: r.nidc ? 'Issued' : 'Not Issued' },
+      { label: 'Aadhaar', value: r.aad || '—' },
+    ].filter(d => d.value && d.value !== '—'),
+  }
+}
+
+function mgBenefit(r) {
+  return {
+    scheme: 'Marriage Assistance', icon: HeartHandshake, color: '#9334e6', status: 'received',
+    details: [
+      { label: 'District', value: r.dist || '—' },
+      { label: 'Taluk', value: r.tal || '—' },
+      { label: 'Disability Type', value: r.dis || '—' },
+    ].filter(d => d.value && d.value !== '—'),
+  }
+}
+
+function scholarshipBenefit(r) {
+  return {
+    scheme: 'Scholarship', icon: Award, color: '#1967d2', status: 'received',
+    details: [
+      { label: 'Class', value: r.cls || '—' },
+      { label: 'Amount', value: r.amt ? `₹${r.amt}` : '—' },
+      { label: 'Bank', value: r.bank || '—' },
+      { label: 'A/C Number', value: r.acc || '—' },
+      { label: 'IFSC', value: r.ifsc || '—' },
+      { label: 'Application No', value: r.app_no || '—' },
+    ].filter(d => d.value && d.value !== '—'),
+  }
+}
+
+function bankloanBenefit(r) {
+  return {
+    scheme: 'Bank Loan Subsidy', icon: Landmark, color: '#34a853', status: 'received',
+    details: [
+      { label: 'Business', value: r.business || '—' },
+      { label: 'Bank', value: r.bank || '—' },
+      { label: 'Branch', value: r.branch || '—' },
+      { label: 'Loan Amount', value: r.loan_amt ? `₹${r.loan_amt}` : '—' },
+      { label: 'Subsidy Amount', value: r.subsidy_amt ? `₹${r.subsidy_amt}` : '—' },
+      { label: 'Application No', value: r.app_no || '—' },
+    ].filter(d => d.value && d.value !== '—'),
+  }
+}
+
+function readersBenefit(r) {
+  return {
+    scheme: 'Readers Allowance', icon: BookOpen, color: '#00acc1', status: 'received',
+    details: [
+      { label: 'Class', value: r.cls || '—' },
+      { label: 'Amount', value: r.amt ? `₹${r.amt}` : '—' },
+      { label: 'Bank', value: r.bank || '—' },
+      { label: 'Ration Card', value: r.rc || '—' },
+      { label: 'Application No', value: r.app_no || '—' },
+    ].filter(d => d.value && d.value !== '—'),
+  }
+}
+
+function udidUncoveredBenefit(r) {
+  return {
+    scheme: 'UDID Not Covered', icon: ShieldAlert, color: '#f9a825', status: 'warning',
+    details: [
+      { label: 'Taluk', value: r.tal || '—' },
+      { label: 'Village', value: r.vil || '—' },
+      { label: 'UDID Number', value: r.udid || '—' },
+    ].filter(d => d.value && d.value !== '—'),
+  }
+}
+
+const OWN_BENEFIT_BUILDERS = {
+  scooty: scootyBenefit, mg: mgBenefit, scholarship: scholarshipBenefit,
+  bankloan: bankloanBenefit, readers: readersBenefit, udid_uncovered: udidUncoveredBenefit,
+}
+
 function getBenefits(person) {
   const benefits = []
-  if (person.src === 'scooty') {
-    benefits.push({
-      scheme: 'Scooty Scheme', icon: Bike, color: '#1a73e8', status: 'received',
-      details: [
-        { label: 'Vehicle No', value: person.veh || '—' },
-        { label: 'Financial Year', value: person.fy || '—' },
-        { label: 'RTO', value: person.rto || '—' },
-        { label: 'Leg Type', value: person.leg || '—' },
-        { label: 'Scooter Type', value: person.stype || '—' },
-        { label: 'Fund Type', value: person.fund || '—' },
-        { label: 'MLA Constituency', value: person.mla || '—' },
-      ].filter(d => d.value && d.value !== '—'),
-    })
-    const surveyMatches = crossReference(person, surveyIdx)
-    if (surveyMatches.length > 0) {
-      const s = surveyMatches[0]
-      benefits.push({
-        scheme: 'DAP Survey Registration', icon: FileText, color: '#34a853', status: 'registered',
-        details: [
-          { label: 'Block', value: s.blk || '—' },
-          { label: 'Village', value: s.vil || '—' },
-          { label: 'Status', value: s.stat || '—' },
-          { label: 'Employed', value: s.emp || '—' },
-          { label: 'Monthly Income', value: s.inc ? `₹${s.inc}` : '—' },
-        ].filter(d => d.value && d.value !== '—'),
-      })
-    }
+  const src = person.src
+
+  if (src && OWN_BENEFIT_BUILDERS[src]) {
+    benefits.push(OWN_BENEFIT_BUILDERS[src](person))
+  }
+
+  if (!src) {
+    benefits.push(surveyBenefit(person))
   } else {
-    const scootyMatches = crossReference(person, scootyIdx)
-    if (scootyMatches.length > 0) {
-      scootyMatches.forEach(sm => {
-        benefits.push({
-          scheme: 'Scooty Scheme', icon: Bike, color: '#1a73e8', status: 'received',
-          details: [
-            { label: 'Vehicle No', value: sm.veh || '—' },
-            { label: 'Financial Year', value: sm.fy || '—' },
-            { label: 'RTO', value: sm.rto || '—' },
-            { label: 'Leg Type', value: sm.leg || '—' },
-            { label: 'Scooter Type', value: sm.stype || '—' },
-            { label: 'Fund Type', value: sm.fund || '—' },
-          ].filter(d => d.value && d.value !== '—'),
-        })
-      })
-    }
-    benefits.push({
-      scheme: 'DAP Survey Registration', icon: FileText, color: '#34a853', status: 'registered',
-      details: [
-        { label: 'Block', value: person.blk || '—' },
-        { label: 'Member Status', value: person.stat || '—' },
-        { label: 'UDID Status', value: person.udid ? 'Issued' : 'Not Issued' },
-        { label: 'NIDC Status', value: person.nidc ? 'Issued' : 'Not Issued' },
-        { label: 'Aadhaar', value: person.aad || '—' },
-      ].filter(d => d.value && d.value !== '—'),
-    })
+    const surveyMatches = crossReference(person, surveyIdx)
+    if (surveyMatches.length > 0) benefits.push(surveyBenefit(surveyMatches[0]))
+  }
+
+  const crossIdxs = [
+    ['scooty', scootyIdx, scootyBenefit],
+    ['mg', mgIdx, mgBenefit],
+    ['scholarship', scholarshipIdx, scholarshipBenefit],
+    ['bankloan', bankloanIdx, bankloanBenefit],
+    ['readers', readersIdx, readersBenefit],
+    ['udid_uncovered', udidUncoveredIdx, udidUncoveredBenefit],
+  ]
+  for (const [key, idx, builder] of crossIdxs) {
+    if (src === key) continue
+    const matches = crossReference(person, idx)
+    matches.forEach(m => benefits.push(builder(m)))
   }
   return benefits
 }
@@ -215,10 +317,10 @@ function BenefitsPanel({ benefits }) {
                 <span style={{ fontSize: 13, fontWeight: 600, color: '#202124', flex: 1 }}>{b.scheme}</span>
                 <span style={{
                   fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 10,
-                  background: b.status === 'received' ? '#e6f4ea' : '#e8f0fe',
-                  color: b.status === 'received' ? '#137333' : '#1967d2',
+                  background: b.status === 'received' ? '#e6f4ea' : b.status === 'warning' ? '#fff3e0' : '#e8f0fe',
+                  color: b.status === 'received' ? '#137333' : b.status === 'warning' ? '#e65100' : '#1967d2',
                 }}>
-                  {b.status === 'received' ? '✓ Received' : '✓ Registered'}
+                  {b.status === 'received' ? '✓ Received' : b.status === 'warning' ? '⚠ Gap' : '✓ Registered'}
                 </span>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 12px' }}>
@@ -326,8 +428,8 @@ function ProfileCard({ person, onClose }) {
 }
 
 function ResultRow({ r, onSelect }) {
-  const scootyMatch = scootyIdx ? crossReference(r, scootyIdx).length > 0 : r.src === 'scooty'
-  const isScooty = r.src === 'scooty'
+  const benefits = getBenefits(r)
+  const meta = SRC_META[r.src] || SRC_META.survey
   return (
     <div onClick={() => onSelect(r)} style={{
       background: '#fff', borderRadius: 12, padding: '14px 16px',
@@ -340,7 +442,7 @@ function ResultRow({ r, onSelect }) {
     >
       <div style={{
         width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
-        background: isScooty ? '#1a73e8' : '#34a853',
+        background: meta.color,
         color: '#fff', fontWeight: 700, fontSize: 16,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
@@ -351,22 +453,26 @@ function ResultRow({ r, onSelect }) {
         <div style={{ fontSize: 12, color: '#5f6368', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           {r.g && <span>{r.g}</span>}
           {r.age && <span>Age {r.age}</span>}
-          {r.blk && <span>📍 {r.blk}</span>}
+          {(r.blk || r.tal) && <span>📍 {r.blk || r.tal}</span>}
+          {r.vil && <span>🏘️ {r.vil}</span>}
           {r.mob && <span>📞 {r.mob}</span>}
           {r.dis && <span style={{ color: '#ea4335' }}>{r.dis?.split('(')[0].trim()}</span>}
         </div>
         <div style={{ fontSize: 11, marginTop: 6, display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
           <span style={{ fontSize: 10, color: '#9aa0a6', fontWeight: 600, textTransform: 'uppercase' }}>Benefits:</span>
-          <span style={{ background: '#e8f0fe', color: '#1967d2', padding: '2px 8px', borderRadius: 10, fontWeight: 600, fontSize: 11 }}>✓ DAP Survey</span>
-          {(isScooty || scootyMatch) && (
-            <span style={{ background: '#f3e8ff', color: '#7c3aed', padding: '2px 8px', borderRadius: 10, fontWeight: 600, fontSize: 11 }}>
-              🛵 Scooty {r.veh ? `(${r.veh})` : ''}
+          {benefits.length === 0 && <span style={{ color: '#9aa0a6', fontSize: 11 }}>None on record</span>}
+          {benefits.map((b, i) => (
+            <span key={i} style={{
+              background: b.status === 'warning' ? '#fff3e0' : b.color + '18',
+              color: b.status === 'warning' ? '#e65100' : b.color,
+              padding: '2px 8px', borderRadius: 10, fontWeight: 600, fontSize: 11,
+            }}>
+              {b.status === 'warning' ? '⚠' : '✓'} {b.scheme}
             </span>
-          )}
+          ))}
           {(r.aad === 'Aadhaar Available' || r.aadhar) && <span style={{ background: '#e6f4ea', color: '#137333', padding: '2px 8px', borderRadius: 10, fontWeight: 500 }}>Aadhaar ✓</span>}
           {r.udid && <span style={{ background: '#e6f4ea', color: '#137333', padding: '2px 8px', borderRadius: 10, fontWeight: 500 }}>UDID ✓</span>}
           {r.nidc && <span style={{ background: '#e8f0fe', color: '#1967d2', padding: '2px 8px', borderRadius: 10, fontWeight: 500 }}>NIDC ✓</span>}
-          {r.emp === 'Yes' && <span style={{ background: '#e6f4ea', color: '#137333', padding: '2px 8px', borderRadius: 10, fontWeight: 500 }}>Employed ✓</span>}
         </div>
       </div>
       <ChevronRight size={18} color="#9aa0a6" style={{ flexShrink: 0 }} />
@@ -386,6 +492,9 @@ export default function Beneficiary() {
   const [dataError, setDataError] = useState(false)
   const [filteredAll, setFilteredAll] = useState(null)  // null = no active filter
   const [page, setPage] = useState(1)
+  const [villages, setVillages] = useState([])
+  const [totalRecords, setTotalRecords] = useState(null)
+  const [vilInput, setVilInput] = useState(() => searchParams.get('vil') || '')
   const inputRef = useRef()
   const dataRef = useRef(null)
 
@@ -401,21 +510,39 @@ export default function Beneficiary() {
   const filterLabel = urlFilter ? getFilterLabel(urlFilter) : null
 
   useEffect(() => {
-    const p1 = cachedSurvey
-      ? Promise.resolve(cachedSurvey)
-      : fetch('/beneficiaries.json').then(r => r.json()).then(d => { cachedSurvey = d; return d })
-    const p2 = cachedScooty
-      ? Promise.resolve(cachedScooty)
-      : fetch('/scooty.json').then(r => r.json()).then(d => { cachedScooty = d; return d })
-    Promise.all([p1, p2])
-      .then(([survey, scooty]) => {
-        dataRef.current = [...survey, ...scooty]
+    Promise.all([
+      cachedFetch('/beneficiaries.json', () => cachedSurvey, d => cachedSurvey = d),
+      cachedFetch('/scooty.json', () => cachedScooty, d => cachedScooty = d),
+      cachedFetch('/mg.json', () => cachedMg, d => cachedMg = d),
+      cachedFetch('/scholarship.json', () => cachedScholarship, d => cachedScholarship = d),
+      cachedFetch('/bankloan.json', () => cachedBankloan, d => cachedBankloan = d),
+      cachedFetch('/readers.json', () => cachedReaders, d => cachedReaders = d),
+      cachedFetch('/udid_uncovered.json', () => cachedUdidUncovered, d => cachedUdidUncovered = d),
+    ])
+      .then(([survey, scooty, mg, scholarship, bankloan, readers, udidUncovered]) => {
+        dataRef.current = [...survey, ...scooty, ...mg, ...scholarship, ...bankloan, ...readers, ...udidUncovered]
         scootyIdx = buildIndex(scooty, ['udid', 'nidc', 'mob', 'aadhar'])
         surveyIdx = buildIndex(survey, ['udid', 'nidc', 'mob'])
+        mgIdx = buildIndex(mg, ['mob'])
+        scholarshipIdx = buildIndex(scholarship, ['udid', 'nidc', 'mob', 'aadhar'])
+        bankloanIdx = buildIndex(bankloan, ['udid', 'nidc', 'mob', 'aadhar'])
+        readersIdx = buildIndex(readers, ['udid', 'nidc', 'mob', 'aadhar'])
+        udidUncoveredIdx = buildIndex(udidUncovered, ['udid', 'mob'])
+
+        const vilSet = new Set()
+        for (const r of survey) if (r.vil) vilSet.add(r.vil.trim())
+        for (const r of udidUncovered) if (r.vil) vilSet.add(r.vil.trim())
+        setVillages(Array.from(vilSet).sort())
+        setTotalRecords(dataRef.current.length)
         setDataLoaded(true)
       })
       .catch(() => setDataError(true))
   }, [])
+
+  // Keep village input in sync with URL (e.g. drill-down navigation from another page)
+  useEffect(() => {
+    setVilInput(urlFilter?.vil || '')
+  }, [urlFilter])
 
   // Apply URL filter when data loads or params change
   useEffect(() => {
@@ -447,7 +574,8 @@ export default function Beneficiary() {
         (r.pds && r.pds.includes(q)) ||
         (r.rc && r.rc.includes(q)) ||
         (r.veh && r.veh.toLowerCase().includes(lower)) ||
-        (r.dap && r.dap.toLowerCase().includes(lower))
+        (r.dap && r.dap.toLowerCase().includes(lower)) ||
+        (r.father && r.father.toLowerCase().includes(lower))
       ) {
         matches.push(r)
         if (matches.length >= 50) break
@@ -466,6 +594,13 @@ export default function Beneficiary() {
     setFilteredAll(null)
     setQuery('')
     setSearchResults([])
+    setVilInput('')
+  }
+
+  const applyVillageFilter = () => {
+    const v = vilInput.trim()
+    if (!v) return
+    setSearchParams({ vil: v })
   }
 
   // Determine what list to show
@@ -479,7 +614,7 @@ export default function Beneficiary() {
 
   return (
     <div>
-      <TopBar title="Individual Search" subtitle="Search 13,095 records — enter UDID, Aadhaar, Name, Mobile, NIDC or Vehicle No to see all benefits" />
+      <TopBar title="Individual Search" subtitle={`Search ${totalRecords ? totalRecords.toLocaleString() + ' records across 7 datasets' : 'all records'} — enter UDID, Aadhaar, Name, Mobile, NIDC or Vehicle No, or browse by Village/Panchayat, to see all benefits`} />
       <div style={{ padding: 24 }}>
 
         {/* Active filter banner */}
@@ -527,7 +662,7 @@ export default function Beneficiary() {
                 {dataLoaded
                   ? filterLabel
                     ? `${totalFiltered.toLocaleString()} records in this filter — search by name, ID, mobile…`
-                    : 'Search across 13,095 records (12,477 survey + 618 scooty) — shows all benefits received'
+                    : `Search across ${totalRecords?.toLocaleString() ?? ''} records from 7 schemes — shows all benefits received`
                   : dataError ? 'Failed to load data' : 'Loading records…'}
               </div>
             </div>
@@ -561,6 +696,41 @@ export default function Beneficiary() {
             {['UDID No', 'Aadhaar', 'Name', 'Mobile', 'NIDC No', 'Vehicle No', 'PDS No', 'Voter ID'].map(t => (
               <span key={t} style={{ fontSize: 11, color: '#5f6368', background: '#f1f3f4', padding: '3px 10px', borderRadius: 20, fontWeight: 500 }}>{t}</span>
             ))}
+          </div>
+
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #f0f0f0' }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#5f6368', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <MapPin size={14} color="#ff7043" /> Browse by Village / Panchayat
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                list="village-options"
+                value={vilInput}
+                onChange={e => setVilInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') applyVillageFilter() }}
+                placeholder="Type or select a village / panchayat…"
+                disabled={!dataLoaded}
+                style={{
+                  flex: 1, padding: '10px 14px', border: '1.5px solid #e0e0e0', borderRadius: 10,
+                  fontSize: 13, outline: 'none', color: '#202124',
+                  background: dataLoaded ? '#fff' : '#f8f9fa', boxSizing: 'border-box',
+                }}
+              />
+              <datalist id="village-options">
+                {villages.map(v => <option key={v} value={v} />)}
+              </datalist>
+              <button
+                onClick={applyVillageFilter}
+                disabled={!dataLoaded || !vilInput.trim()}
+                style={{
+                  padding: '10px 18px', background: vilInput.trim() ? '#1a73e8' : '#e0e0e0',
+                  color: '#fff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 600,
+                  cursor: vilInput.trim() ? 'pointer' : 'not-allowed',
+                }}
+              >
+                Go
+              </button>
+            </div>
           </div>
         </div>
 
@@ -627,9 +797,14 @@ export default function Beneficiary() {
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 20, flexWrap: 'wrap' }}>
               {[
-                { icon: Bike, label: 'Scooty Scheme', color: '#1a73e8' },
                 { icon: FileText, label: 'DAP Survey', color: '#34a853' },
-                { icon: Filter, label: 'Filter by Block / Gender / UDID…', color: '#9334e6' },
+                { icon: Bike, label: 'Scooty Scheme', color: '#1a73e8' },
+                { icon: HeartHandshake, label: 'Marriage Assistance', color: '#9334e6' },
+                { icon: Award, label: 'Scholarship', color: '#1967d2' },
+                { icon: Landmark, label: 'Bank Loan Subsidy', color: '#34a853' },
+                { icon: BookOpen, label: 'Readers Allowance', color: '#00acc1' },
+                { icon: ShieldAlert, label: 'UDID Not Covered', color: '#f9a825' },
+                { icon: MapPin, label: 'Browse by Village / Panchayat', color: '#ff7043' },
               ].map(({ icon: Icon, label, color }) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6, background: color + '12', border: `1px solid ${color}30`, borderRadius: 10, padding: '8px 14px' }}>
                   <Icon size={16} color={color} />

@@ -1,0 +1,143 @@
+"""Recompute src/data/stats.js from public/beneficiaries.json."""
+import sys, io, json
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+from normalize import (
+    BENEFICIARY_DIS_MAP, BENEFICIARY_CASTE_MAP, BENEFICIARY_EDU_MAP,
+    BENEFICIARY_HSTAT_MAP, BENEFICIARY_HTYPE_MAP, BENEFICIARY_WATER_MAP,
+    BENEFICIARY_TOILET_MAP, BENEFICIARY_ETYPE_MAP,
+)
+
+BENEFICIARIES_JSON = 'public/beneficiaries.json'
+STATS_JS = 'src/data/stats.js'
+
+
+def is_val(v):
+    return v is not None and str(v).strip() not in ('', 'nan', 'NaT', 'None')
+
+
+def count_field(records, key, normalize=None):
+    counts = {}
+    for r in records:
+        v = r.get(key)
+        if not is_val(v):
+            continue
+        v = str(v).strip()
+        if normalize:
+            v = normalize.get(v, v)
+        counts[v] = counts.get(v, 0) + 1
+    return dict(sorted(counts.items(), key=lambda x: -x[1]))
+
+
+def main():
+    with open(BENEFICIARIES_JSON, encoding='utf-8') as f:
+        records = json.load(f)
+
+    total = len(records)
+    udid_holders = sum(1 for r in records if is_val(r.get('udid')))
+    nidc_holders = sum(1 for r in records if is_val(r.get('nidc')))
+    aadhaar_linked = sum(1 for r in records if r.get('aad') == 'Aadhaar Available' or is_val(r.get('aadhar')))
+    employed = sum(1 for r in records if r.get('emp') == 'Yes')
+    permanent_disability = sum(1 for r in records if r.get('nat') == 'Permanent')
+
+    gender = count_field(records, 'g')
+    blocks = count_field(records, 'blk')
+    disability_type = count_field(records, 'dis', BENEFICIARY_DIS_MAP)
+    nature = count_field(records, 'nat')
+    caste = count_field(records, 'caste', BENEFICIARY_CASTE_MAP)
+    marital = count_field(records, 'mar')
+    education = count_field(records, 'edu', BENEFICIARY_EDU_MAP)
+    area_type = count_field(records, 'area')
+    employment_status = count_field(records, 'emp')
+    employment_type = count_field(records, 'etype', BENEFICIARY_ETYPE_MAP)
+    house_status = count_field(records, 'hstat', BENEFICIARY_HSTAT_MAP)
+    house_type = count_field(records, 'htype', BENEFICIARY_HTYPE_MAP)
+    electricity = count_field(records, 'elec')
+    water = count_field(records, 'water', BENEFICIARY_WATER_MAP)
+    toilet = count_field(records, 'toilet', BENEFICIARY_TOILET_MAP)
+
+    age_groups = {'0-10': 0, '11-20': 0, '21-30': 0, '31-40': 0, '41-50': 0,
+                  '51-60': 0, '61-70': 0, '71-80': 0, '80+': 0}
+    for r in records:
+        a = r.get('age')
+        if not is_val(a):
+            continue
+        try:
+            a = int(float(a))
+        except (ValueError, TypeError):
+            continue
+        if a <= 10: age_groups['0-10'] += 1
+        elif a <= 20: age_groups['11-20'] += 1
+        elif a <= 30: age_groups['21-30'] += 1
+        elif a <= 40: age_groups['31-40'] += 1
+        elif a <= 50: age_groups['41-50'] += 1
+        elif a <= 60: age_groups['51-60'] += 1
+        elif a <= 70: age_groups['61-70'] += 1
+        elif a <= 80: age_groups['71-80'] += 1
+        else: age_groups['80+'] += 1
+
+    incomes = []
+    for r in records:
+        v = r.get('inc')
+        if not is_val(v):
+            continue
+        try:
+            incomes.append(float(v))
+        except (ValueError, TypeError):
+            pass
+    income_stats = {
+        'mean': round(sum(incomes) / len(incomes), 2) if incomes else 0,
+        'median': sorted(incomes)[len(incomes) // 2] if incomes else 0,
+        'count_with_income': len(incomes),
+    }
+
+    top5_dis = list(disability_type.keys())[:5]
+    block_disability = {}
+    for r in records:
+        b = r.get('blk')
+        d = r.get('dis')
+        if not is_val(b) or not is_val(d):
+            continue
+        d = BENEFICIARY_DIS_MAP.get(str(d).strip(), str(d).strip())
+        if d not in top5_dis:
+            continue
+        block_disability.setdefault(b, {k: 0 for k in top5_dis})
+        block_disability[b][d] += 1
+    # keep block order matching `blocks` count desc
+    block_disability = {b: block_disability.get(b, {k: 0 for k in top5_dis}) for b in blocks}
+
+    stats = {
+        'total': total,
+        'udid_holders': udid_holders,
+        'nidc_holders': nidc_holders,
+        'aadhaar_linked': aadhaar_linked,
+        'employed': employed,
+        'permanent_disability': permanent_disability,
+        'gender': gender,
+        'blocks': blocks,
+        'disability_type': disability_type,
+        'nature': nature,
+        'caste': caste,
+        'marital': marital,
+        'education': education,
+        'area_type': area_type,
+        'employment_status': employment_status,
+        'employment_type': employment_type,
+        'house_status': house_status,
+        'house_type': house_type,
+        'electricity': electricity,
+        'water': water,
+        'toilet': toilet,
+        'age_groups': age_groups,
+        'income_stats': income_stats,
+        'block_disability': block_disability,
+    }
+
+    js = '// Auto-generated by scripts/build_stats.py from public/beneficiaries.json\n'
+    js += 'const stats = ' + json.dumps(stats, ensure_ascii=False, indent=2) + '\n\nexport default stats\n'
+    with open(STATS_JS, 'w', encoding='utf-8') as f:
+        f.write(js)
+    print(f'Wrote {STATS_JS} — total {total} records')
+
+
+if __name__ == '__main__':
+    main()
