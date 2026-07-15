@@ -187,7 +187,7 @@ function surveyBenefit(r) {
 
 function mgBenefit(r) {
   return {
-    scheme: 'Marriage Assistance', icon: HeartHandshake, color: '#9334e6', status: 'received',
+    scheme: 'Maintenance Grant', icon: HeartHandshake, color: '#9334e6', status: 'received',
     details: [
       { label: 'District', value: r.dist || '—' },
       { label: 'Taluk', value: r.tal || '—' },
@@ -799,7 +799,7 @@ export default function Beneficiary() {
               {[
                 { icon: FileText, label: 'DAP Survey', color: '#34a853' },
                 { icon: Bike, label: 'Scooty Scheme', color: '#1a73e8' },
-                { icon: HeartHandshake, label: 'Marriage Assistance', color: '#9334e6' },
+                { icon: HeartHandshake, label: 'Maintenance Grant', color: '#9334e6' },
                 { icon: Award, label: 'Scholarship', color: '#1967d2' },
                 { icon: Landmark, label: 'Bank Loan Subsidy', color: '#34a853' },
                 { icon: BookOpen, label: 'Readers Allowance', color: '#00acc1' },

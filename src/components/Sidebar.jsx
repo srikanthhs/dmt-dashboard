@@ -16,7 +16,7 @@ const NAV = [
   { to: '/infrastructure', icon: Home, label: 'Infrastructure' },
   { to: '/blocks', icon: Map, label: 'Block-wise' },
   { to: '/scooty', icon: Bike, label: 'Scooty Scheme' },
-  { to: '/marriage-assistance', icon: HeartHandshake, label: 'Marriage Assistance' },
+  { to: '/marriage-assistance', icon: HeartHandshake, label: 'Maintenance Grant' },
   { to: '/scholarship', icon: Award, label: 'Scholarship' },
   { to: '/bank-loan', icon: Landmark, label: 'Bank Loan Subsidy' },
   { to: '/readers-allowance', icon: BookOpen, label: 'Readers Allowance' },
