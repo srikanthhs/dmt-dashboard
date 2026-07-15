@@ -10,6 +10,12 @@ import Infrastructure from './pages/Infrastructure'
 import Blocks from './pages/Blocks'
 import Beneficiary from './pages/Beneficiary'
 import Scooty from './pages/Scooty'
+import MarriageAssistance from './pages/MarriageAssistance'
+import Scholarship from './pages/Scholarship'
+import BankLoan from './pages/BankLoan'
+import ReadersAllowance from './pages/ReadersAllowance'
+import UdidUncovered from './pages/UdidUncovered'
+import Deduplication from './pages/Deduplication'
 
 export default function App() {
   return (
@@ -28,6 +34,12 @@ export default function App() {
             <Route path="/blocks" element={<Blocks />} />
             <Route path="/beneficiary" element={<Beneficiary />} />
             <Route path="/scooty" element={<Scooty />} />
+            <Route path="/marriage-assistance" element={<MarriageAssistance />} />
+            <Route path="/scholarship" element={<Scholarship />} />
+            <Route path="/bank-loan" element={<BankLoan />} />
+            <Route path="/readers-allowance" element={<ReadersAllowance />} />
+            <Route path="/udid-uncovered" element={<UdidUncovered />} />
+            <Route path="/dedup" element={<Deduplication />} />
           </Routes>
         </main>
       </div>
