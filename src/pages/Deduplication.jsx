@@ -8,7 +8,7 @@ import TopBar from '../components/TopBar'
 const DATASETS = [
   { key: 'beneficiaries', label: 'DAP Survey', url: '/beneficiaries.json', color: '#34a853' },
   { key: 'scooty', label: 'Scooty Scheme', url: '/scooty.json', color: '#1a73e8' },
-  { key: 'mg', label: 'Marriage Assistance', url: '/mg.json', color: '#9334e6' },
+  { key: 'mg', label: 'Maintenance Grant', url: '/mg.json', color: '#9334e6' },
   { key: 'scholarship', label: 'Scholarship', url: '/scholarship.json', color: '#1967d2' },
   { key: 'bankloan', label: 'Bank Loan Subsidy', url: '/bankloan.json', color: '#34a853' },
   { key: 'readers', label: 'Readers Allowance', url: '/readers.json', color: '#00acc1' },

@@ -14,8 +14,8 @@ const topDis = disData[0]?.name
 export default function MarriageAssistance() {
   return (
     <SchemePage
-      title="Marriage Assistance"
-      subtitle="Marriage grant / assistance disbursed to persons with disabilities"
+      title="Maintenance Grant"
+      subtitle="Maintenance grant disbursed to persons with disabilities"
       dataUrl="/mg.json"
       headerGradient="linear-gradient(135deg,#9334e6,#c158dc)"
       statCards={[
